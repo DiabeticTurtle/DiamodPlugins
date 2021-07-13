@@ -1,16 +1,20 @@
+import json
+from typing import Any, Dict, Union
+
 import discord
 from datetime import datetime
 from discord.ext import commands
 
 from core import checks
 from core.models import PermissionLevel
+from .models import apply_vars, SafeString
 
 
 class TagsPlugin(commands.Cog):
     def __init__(self, bot):
         self.bot: discord.Client = bot
         self.db = bot.plugin_db.get_partition(self)
-
+        
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
     @checks.has_permissions(PermissionLevel.REGULAR)
@@ -45,18 +49,40 @@ class TagsPlugin(commands.Cog):
                 f":white_check_mark: | Tag with name `{name}` has been successfully created!"
             )
             return
+        
+    @tags.command(name='list')
+    async def list_(self, ctx):
+        '''Get a list of tags that hace already been made.'''
+
+        tags = await self.db.find({}).to_list(length=None)
+
+        if tags is None:
+            return await ctx.send(':x: | You don\'t have any tags.')
+        
+        list_tags = []
+
+        for tag in tags:
+            try:
+                list_tags.append(tag['name'])
+            except:
+                continue
+
+        send_tags = 'Tags: ' + ', '.join(list_tags)
+
+        await ctx.send(send_tags)   
+
+
 
     @tags.command()
     async def edit(self, ctx: commands.Context, name: str, *, content: str):
         """
         Edit an existing tag
-
         Only owner of tag or user with Manage Server permissions can use this command
         """
         tag = await self.find_db(name=name)
 
         if tag is None:
-            await ctx.send(f":x: | Tag with name `{name}` dose'nt exist")
+            await ctx.send(f":x: | Tag with name `{name}` does'nt exist")
             return
         else:
             member: discord.Member = ctx.author
@@ -76,7 +102,6 @@ class TagsPlugin(commands.Cog):
     async def delete(self, ctx: commands.Context, name: str):
         """
         Delete a tag.
-
         Only owner of tag or user with Manage Server permissions can use this command
         """
         tag = await self.find_db(name=name)
@@ -148,6 +173,7 @@ class TagsPlugin(commands.Cog):
 
     @commands.command()
     async def tag(self, ctx: commands.Context, name: str):
+        
         """
         Use a tag!
         """
@@ -164,17 +190,25 @@ class TagsPlugin(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
+        if msg.author.bot and msg.content.startswith("Please set your Nightscout"):
+            await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
+            return
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
             return
+        
         content = msg.content.replace(self.bot.prefix, "")
         names = content.split(" ")
 
         tag = await self.db.find_one({"name": names[0]})
-
+        thing = json.loads(tag["content"])
+        embed = discord.Embed.from_dict(thing['embed'])
         if tag is None:
             return
         else:
-            await msg.channel.send(tag["content"])
+            
+            
+            
+            await msg.channel.send(embed=embed)
             await self.db.find_one_and_update(
                 {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
             )
@@ -182,6 +216,24 @@ class TagsPlugin(commands.Cog):
 
     async def find_db(self, name: str):
         return await self.db.find_one({"name": name})
+
+    #def format_message(self, tag: str, message: discord.Message) -> Dict[str, Union[Any]]:
+    #    updated_tag: Dict[str, Union[Any]]
+    #    try:
+    #        updated_tag = json.loads(tag)
+    #    except json.JSONDecodeError:
+    #        # message is not embed
+    #        tag = apply_vars(self.bot, tag, message)
+    #        updated_tag = {'content': tag}
+    #    else:
+    #        # message is embed
+    #        updated_tag = self.apply_vars_dict(updated_tag, message)
+
+    #        if 'embed' in updated_tag:
+    #            updated_tag['embed'] = discord.Embed.from_dict(updated_tag['embed'])
+    #        else:
+    #            updated_tag = None
+    #    return updated_tag
 
 
 def setup(bot):
