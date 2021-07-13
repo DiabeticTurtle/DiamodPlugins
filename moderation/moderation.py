@@ -229,7 +229,7 @@ class Moderation(commands.Cog):
                 reason = reason + "."
 
         msg = f"You have been banned from {ctx.guild.name}" + (
-            f" for: {reason}"  ". If you have any questions please join this server: https://discord.gg/3Dfh45GTWq and ask here."
+            f" for: {reason}. If you have any questions please join this server: https://discord.gg/3Dfh45GTWq and ask here." if reason else None
         )
  
         try:
