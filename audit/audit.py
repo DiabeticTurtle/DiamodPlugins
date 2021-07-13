@@ -35,8 +35,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import datetime
 from io import BytesIO
 from json import JSONDecodeError
+import logging
 from urllib.parse import urlparse
 import re
+from logging import getLogger
 import typing
 from collections import defaultdict
 import pickle
@@ -98,10 +100,12 @@ class Audit(commands.Cog):
             r"(?:https?://)?(?:www\.)?(?:discord\.(?:gg|io|me|li)|(?:discordapp|discord)\.com/invite)/[\w]+"
         )
         self.whname = "Modmail Audit Logger"
-        self.acname = "modmail-audit"
+        self.acname = "severe-logs"
         self._webhooks = {}
         self._webhook_locks = {}
-
+        self.db = bot.plugin_db.get_partition(self)
+        self.logger = logging.getLogger(__name__)
+            
         self.all = (
             'mute',
             'unmute',
@@ -117,6 +121,7 @@ class Audit(commands.Cog):
             'member leave',
             'member ban',
             'member unban',
+            'member kick',
             'role create',
             'role update',
             'role delete',
@@ -128,8 +133,11 @@ class Audit(commands.Cog):
             'invites',
             'invite create',
             'invite delete'
+            
+        
         )
 
+        self.db.find_one({'_id': 'enabled'})
         self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.store_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'store.pkl')
         if os.path.exists(self.store_path):
@@ -190,7 +198,7 @@ class Audit(commands.Cog):
         return lock
 
     def _save_pickle(self):
-        print('saving pickle')
+        print('saving HotPickle')
         with open(self.store_path, 'wb') as f:
             try:
                 pickle.dump((self.enabled, self.ignored_channel_ids, self.ignored_category_ids), f)
@@ -207,7 +215,7 @@ class Audit(commands.Cog):
 
     @commands.group()
     async def audit(self, ctx):
-        """Audit logs, copied from mee6."""
+        """Audit logs, copied from Mee6."""
 
     @audit.command()
     async def ignore(self, ctx, *, channel: typing.Union[discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel]):
@@ -613,9 +621,9 @@ class Audit(commands.Cog):
             if added_roles or removed_roles:
                 embed = get_embed(f"**:crossed_swords: {after.mention} roles have changed**")
                 if added_roles:
-                    embed.add_field(name='Added roles', value=f"{' '.join('``' + r.name + '``' for r in added_roles)}", inline=False)
+                    embed.add_field(name='Added roles', value=f"{' '.join('`' + r.name + '`' for r in added_roles)}", inline=False)
                 if removed_roles:
-                    embed.add_field(name='Removed roles', value=f"{' '.join('``' + r.name + '``' for r in removed_roles)}", inline=False)
+                    embed.add_field(name='Removed roles', value=f"{' '.join('`' + r.name + '`' for r in removed_roles)}", inline=False)
                 await self.send_webhook(after.guild, embed=embed)
 
     async def _user_update(self, guild, before, after):
@@ -657,7 +665,7 @@ class Audit(commands.Cog):
         await self.send_webhook(member.guild, embed=embed)
 
     @commands.Cog.listener()
-    async def on_member_leave(self, member):
+    async def on_member_remove(self, member):
         if not self.c('member leave', member.guild):
             return
         embed = self.user_base_embed(member, user_update=True)
@@ -672,7 +680,16 @@ class Audit(commands.Cog):
             return
         embed = self.user_base_embed(user, user_update=True)
         embed.colour = discord.Colour.red()
-        embed.description = f"**:man_police_officer: :lock: {user.mention} was banned**"
+        embed.description = f"**:rotating_light: {user.mention} was banned**"
+        await self.send_webhook(guild, embed=embed)
+
+    @commands.Cog.listener()
+    async def on_member_kick(self, guild, user):
+        if not self.c('member kick', guild):
+            return
+        embed = self.user_base_embed(user, user_update=True)
+        embed.colour = discord.Colour.orange()
+        embed.description = f"**:boot: {user.mention} was kicked**"
         await self.send_webhook(guild, embed=embed)
 
     @commands.Cog.listener()
@@ -681,7 +698,7 @@ class Audit(commands.Cog):
             return
         embed = self.user_base_embed(user, user_update=True)
         embed.colour = discord.Colour.green()
-        embed.description = f"**:man_police_officer: :unlock: {user.mention} was unbanned**"
+        embed.description = f"**:ballot_box_with_check: {user.mention} was unbanned**"
         await self.send_webhook(guild, embed=embed)
 
     @commands.Cog.listener()
