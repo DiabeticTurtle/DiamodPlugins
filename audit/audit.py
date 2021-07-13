@@ -89,7 +89,7 @@ def human_timedelta(dt, *, source=None):
         return output[0] + suffix
     if len(output) == 2:
         return f"{output[0]} and {output[1]}{suffix}"
-    return f"{output[0]}, {output[1]} and {output[2]}{suffix}"
+    return f"{output[0]}, {output[1]} and {output[2]}{suffix}" 
 
 
 class Audit(commands.Cog):
