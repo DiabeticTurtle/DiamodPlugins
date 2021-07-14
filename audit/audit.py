@@ -504,7 +504,7 @@ class Audit(commands.Cog):
         embed.colour = discord.Colour.red()
         embed.description = f"**:scissors: Message deleted from {message.channel.mention}:**\n\n"
         embed.description += message.content or "Message has no content."
-        files = []
+      # files = []
         if message.attachments:
             diff_text = ''
             for att in message.attachments:
