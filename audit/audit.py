@@ -107,16 +107,10 @@ class Audit(commands.Cog):
         self.logger = logging.getLogger(__name__)
             
         self.all = (
-            'mute',
-            'unmute',
-            'deaf',
-            'undeaf',
-            'message update',
             'message delete',
             'message purge',
             'member nickname',
             'member roles',
-            'user update',
             'member join',
             'member leave',
             'member ban',
