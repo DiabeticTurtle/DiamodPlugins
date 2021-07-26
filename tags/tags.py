@@ -182,7 +182,7 @@ class TagsPlugin(commands.Cog):
             await ctx.send(f":x: | Tag {name} not found.")
             return
         else:
-            await ctx.send(tag["content"])
+            await ctx.send("```" + tag["content"] + "```")
             await self.db.find_one_and_update(
                 {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
             )
