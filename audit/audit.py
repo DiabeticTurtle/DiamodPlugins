@@ -495,8 +495,8 @@ class Audit(commands.Cog):
         embed = self.user_base_embed(message.author)
         embed.set_footer(text=f"Message ID: {message.id} & sent on")
         embed.timestamp = message.created_at
-        embed.colour = discord.Colour.red()
-        embed.description = f"**:scissors: Message deleted from {message.channel.mention}:**\n\n"
+        embed.colour = discord.Colour.darker_grey()
+        embed.description = f"**:wastebasket: Message deleted from {message.channel.mention}:**\n\n"
         embed.description += message.content or "Message has no content."
         files = []
         if message.attachments:
@@ -516,14 +516,14 @@ class Audit(commands.Cog):
         
 
         if len(embed.description) >= 2048:
-            embed.description = "**:scissors: Message deleted:**\n\n"
+            embed.description = "**:wastebasket: Message deleted:**\n\n"
             embed.description += message.content or "Message has no content."
             embed.add_field(name="Channel", value=message.channel.mention)
 
         embed2 = discord.Embed()
         embed2.timestamp = datetime.datetime.utcnow()
         embed2.set_footer(text=f"Channel ID: {message.channel.id} & deleted on")
-        embed2.colour = discord.Colour.red()
+        embed2.colour = discord.Colour.darker_grey()
         await self.send_webhook(message.guild, embeds=[embed, embed2], files=files)
 
     @commands.Cog.listener()
@@ -571,7 +571,7 @@ class Audit(commands.Cog):
                 upload_text += f'Unknown message ID{pl_unknown}: ' + ', '.join(map(str, unknown_message_ids)) + '.'
 
         embed = discord.Embed()
-        embed.description = f"**:scissors: Messages purged from {channel.mention}:**" \
+        embed.description = f"**:wastebasket: Messages purged from {channel.mention}:**" \
                             f"\n\nTotal deleted messages: {len(message_ids)}."
         embed.colour = discord.Colour.red()
         embed.set_footer(text=f"Channel ID: {payload.channel_id}")
