@@ -666,7 +666,7 @@ class Audit(commands.Cog):
         if not self.c('member ban', guild):
             return
         embed = self.user_base_embed(user, user_update=True)
-        embed.colour = discord.Colour.red()
+        embed.colour = discord.Colour.dark_red()
         embed.description = f"**:rotating_light: {user.mention} was banned**"
         await self.send_webhook(guild, embed=embed)
 
@@ -675,7 +675,7 @@ class Audit(commands.Cog):
         if not self.c('member kick', guild):
             return
         embed = self.user_base_embed(user, user_update=True)
-        embed.colour = discord.Colour.orange()
+        embed.colour = discord.Colour.dark_orange()
         embed.description = f"**:boot: {user.mention} was kicked**"
         await self.send_webhook(guild, embed=embed)
 
@@ -684,7 +684,7 @@ class Audit(commands.Cog):
         if not self.c('member unban', guild):
             return
         embed = self.user_base_embed(user, user_update=True)
-        embed.colour = discord.Colour.green()
+        embed.colour = discord.Colour.dark_green()
         embed.description = f"**:ballot_box_with_check: {user.mention} was unbanned**"
         await self.send_webhook(guild, embed=embed)
 
@@ -1121,7 +1121,7 @@ class Audit(commands.Cog):
             return
 
         embed = discord.Embed()
-        embed.colour = discord.Colour.red()
+        embed.colour = discord.Colour.greyple()
         embed.timestamp = datetime.datetime.utcnow()
 
         embed.add_field(name="Name", value=channel.name)
