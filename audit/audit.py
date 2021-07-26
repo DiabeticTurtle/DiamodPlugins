@@ -513,14 +513,7 @@ class Audit(commands.Cog):
             embed.set_image(url=message.attachments[0].url)
             embed.add_field(name="Attachments", value=diff_text)
 
-        if message.mention_everyone:
-            embed.add_field(name="Mentions everyone", value="`true`")
-        else:
-            embed.add_field(name="Mentions everyone", value="`false`")
-        if message.pinned:
-            embed.add_field(name="Pinned", value="`true`")
-        else:
-            embed.add_field(name="Pinned", value="`false`")
+        
 
         if len(embed.description) >= 2048:
             embed.description = "**:scissors: Message deleted:**\n\n"
