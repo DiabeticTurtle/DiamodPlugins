@@ -217,56 +217,116 @@ class Moderation(commands.Cog):
             ).set_footer(text=f"This is the {case} case.")
         )
 
-    @commands.command(usage="<member> [reason]")
-    @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def ban(self, ctx, member: discord.Member = None, *, reason=None):
-        """Bans the specified member."""
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def ban(self, ctx, member : discord.Member = None, *, reason = None):
         if member == None:
-            return await ctx.send_help(ctx.command)
-
-        if reason != None:
-            if not reason.endswith("."):
-                reason = reason + "."
-
-        msg = f"You have been banned from {ctx.guild.name}" + (
-            f" for: {reason}. If you have any questions please join this server: https://discord.gg/3Dfh45GTWq and ask here." if reason else None
-        )
- 
-        try:
-            await member.send(msg)
-        except discord.errors.Forbidden:
-            pass
-
-        try:
-            await member.ban(reason=reason, delete_message_days=0)
-        except discord.errors.Forbidden:
-            return await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="I don't have enough permissions to ban them.",
-                    color=discord.Color.red(),
-                ).set_footer(text="Please fix the permissions.")
+            embed = discord.Embed(
+                title = "Ban Error",
+                description = "Please specify a user!",
+                color = self.errorcolor
             )
+            await ctx.send(embed = embed)
+        else:
+            if member.id == ctx.message.author.id:
+                embed = discord.Embed(
+                    title = "Ban Error",
+                    description = "You can't ban yourself!",
+                    color = self.blurple
+                )
+                await ctx.send(embed = embed)
+            else:
+                if reason == None:
+                    await member.ban(reason = f"Moderator - {ctx.message.author.name}#{ctx.message.author.discriminator}.\nReason - No Reason Provided.")
+                    embed = discord.Embed(
+                        title = "Ban",
+                        description = f"{member.mention} has been banned by {ctx.message.author.mention}.",
+                        color = self.blurple
+                    )
+                    modlog = discord.utils.get(ctx.guild.text_channels, name = "modlog")
+                    if modlog == None:
+                        return
+                    if modlog != None:
+                        embed = discord.Embed(
+                            title = "Ban",
+                            description = f"{member.mention} has been banned by {ctx.message.author.mention}.",
+                            color = self.blurple
+                        )
+                        await modlog.send(embed = embed)
+                else:
+                    await member.ban(reason = f"Moderator - {ctx.message.author.name}#{ctx.message.author.discriminator}.\nReason - {reason}")
+                    embed = discord.Embed(
+                        title = "Ban",
+                        description = f"{member.mention} has been banned by {ctx.message.author.mention} for {reason}",
+                        color = self.blurple
+                    )
+                    await ctx.send(embed = embed)
+                    modlog = discord.utils.get(ctx.guild.text_channels, name = "modlog")
+                    if modlog == None:
+                        return
+                    if modlog != None:
+                        embed = discord.Embed(
+                            title = "Ban",
+                            description = f"{member.mention} has been banned by {ctx.message.author.mention} in {ctx.message.channel.mention} for {reason}",
+                            color = self.blurple
+                        )
+                        await modlog.send(embed = embed)
 
-        case = await self.get_case()
+    @ban.error
+    async def ban_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            embed = discord.Embed(
+                title = "Missing Permissions",
+                description = "You are missing the **Administrator** permission level!",
+                color = self.errorcolor
+            )
+            await ctx.send(embed = embed, delete_after = 5.0)
 
-        await self.log(
-            guild=ctx.guild,
-            embed=discord.Embed(
-                title="Ban",
-                description=f"{member} has been banned by {ctx.author.mention}"
-                + (f" for: {reason}" if reason else "."),
-                color=self.bot.main_color,
-            ).set_footer(text=f"This is the {case} case."),
-        )
+    #Unban command
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def unban(self, ctx, *, member : discord.User = None):
+        if member == None:
+            embed = discord.Embed(
+                title = "Unban Error",
+                description = "Please specify a user!",
+                color = self.errorcolor
+            )
+            await ctx.send(embed = embed, delete_after = 5.0)
+        else:
+            banned_users = await ctx.guild.bans()
+            for ban_entry in banned_users:
+                user = ban_entry.user
 
-        await ctx.send(
-            embed=discord.Embed(
-                title="Success",
-                description=f"{member} has been banned.",
-                color=self.bot.main_color,
-            ).set_footer(text=f"This is the {case} case.")
-        )
+                if (user.name, user.discriminator) == (member.name, member.discriminator):
+                    embed = discord.Embed(
+                        title = "Unban",
+                        description = f"Unbanned {user.mention}",
+                        color = self.blurple
+                    )
+                    await ctx.guild.unban(user)
+                    await ctx.send(embed = embed)
+                    modlog = discord.utils.get(ctx.guild.text_channels, name = "modlog")
+                    if modlog == None:
+                        return
+                    if modlog != None:
+                        embed = discord.Embed(
+                            title = "Ban",
+                            description = f"{user.mention} has been unbanned by {ctx.message.author.mention} in {ctx.message.channel.mention}.",
+                            color = self.blurple
+                        )
+                        await modlog.send(embed = embed)
+
+
+    @unban.error
+    async def unban_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            embed = discord.Embed(
+                title = "Missing Permissions",
+                description = "You are missing the **Administrator** permission level!",
+                color = self.errorcolor
+            )
+            await ctx.send(embed = embed, delete_after = 5.0)
 
     @commands.command(usage="<member> [reason]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
