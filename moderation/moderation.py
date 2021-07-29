@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands
 from core import checks
@@ -202,6 +203,54 @@ class moderation(commands.Cog):
                 color = self.errorcolor
             )
             await ctx.send(embed = embed, delete_after = 5.0)
+
+    @commands.command(usage="<member> [reason]")
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    async def warn(self, ctx, member: discord.Member = None, *, reason=None):
+        """
+        Warns the specified member.
+        """
+        if member == None:
+            return await ctx.send_help(ctx.command)
+
+        if reason != None:
+            if not reason.endswith("."):
+                reason = reason + "."
+
+        case = await self.get_case()
+
+        msg = f"You have been warned in {ctx.guild.name}" + (
+            f" for: {reason}" if reason else "."
+        )
+
+        await self.log(
+            guild=ctx.guild,
+            embed=discord.Embed(
+                title="Warn",
+                description=f"{member} has been warned by {ctx.author.mention}"
+                + (f" for: {reason}" if reason else "."),
+                color=self.bot.main_color,
+            ).set_footer(text=f"This is the {case} case."),
+        )
+
+        try:
+            await member.send(msg)
+        except discord.errors.Forbidden:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Logged",
+                    description=f"Warning has been logged for {member}. I couldn't warn them, they disabled DMs.",
+                    color=self.bot.main_color,
+                ).set_footer(text=f"This is the {case} case.")
+            )
+
+        await ctx.send(
+            embed=discord.Embed(
+                title="Success",
+                description=f"{member} has been warned.",
+                color=self.bot.main_color,
+            ).set_footer(text=f"This is the {case} case.")
+        )
 
     #Unban command
     @commands.command()
