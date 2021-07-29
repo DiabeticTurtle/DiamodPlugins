@@ -217,7 +217,7 @@ class moderation(commands.Cog):
             if not reason.endswith("."):
                 reason = reason + "."
 
-        case = await self.get_case()
+    
 
         msg = f"You have been warned in {ctx.guild.name}" + (
             f" for: {reason}" if reason else "."
@@ -230,7 +230,7 @@ class moderation(commands.Cog):
                 description=f"{member} has been warned by {ctx.author.mention}"
                 + (f" for: {reason}" if reason else "."),
                 color=self.bot.main_color,
-            ).set_footer(text=f"This is the {case} case."),
+            )
         )
 
         try:
@@ -241,7 +241,7 @@ class moderation(commands.Cog):
                     title="Logged",
                     description=f"Warning has been logged for {member}. I couldn't warn them, they disabled DMs.",
                     color=self.bot.main_color,
-                ).set_footer(text=f"This is the {case} case.")
+                )
             )
 
         await ctx.send(
@@ -249,7 +249,7 @@ class moderation(commands.Cog):
                 title="Success",
                 description=f"{member} has been warned.",
                 color=self.bot.main_color,
-            ).set_footer(text=f"This is the {case} case.")
+            )
         )
 
     #Unban command
