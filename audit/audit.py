@@ -122,7 +122,6 @@ class Audit(commands.Cog):
             'server edited',
             'server emoji',
             'channel create',
-            'channel update',
             'channel delete',
             'invites',
             'invite create',
