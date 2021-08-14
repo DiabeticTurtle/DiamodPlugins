@@ -271,7 +271,7 @@ class Moderation(commands.Cog):
     
                         
     @commands.command(usage="<Member> [reason]")
-    @checks.has_any_role('muter', 'DiaAdmin')
+    @checks.has_permissions(PermissionLevel.MODERATOR)
     async def mute(self, ctx, member: discord.Member = None, *, reason=None):
         """Mutes the specified member."""
         if member == None:
