@@ -268,41 +268,7 @@ class Moderation(commands.Cog):
             ).set_footer(text=f"This is the {case} case.")
         )
 
-    @commands.command(usage="<Member ID>")
-    @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def unban(self, ctx, member: discord.Member, *, reason=None):
-        """Unbans the specified member."""
-        
-
-        guild = ctx.guild
-        author = ctx.author
-        case = await self.get_case()
-
-        if member.id in await self.bot.get_bans(guild):
-            await ctx.guild.unban(user)
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Success",
-                    description=f"{member} has been unbanned.",
-                    color=self.bot.main_color,
-                ).set_footer(text=f"This is the {case} case.")
-            )
-            await self.log(
-                guild=guild,
-                embed=discord.Embed(
-                    title="Unban",
-                    description=f"{member} has been unbanned by {author.mention} for: {reason}",
-                    color=self.bot.main_color,
-                ).set_footer(text=f"This is the {case} case."),
-            )
-        else:
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description=f"{member} is not banned.",
-                    color=discord.Color.red(),
-                ).set_footer(text=f"This is the {case} case.")
-            )
+    
                         
     @commands.command(usage="<Member> [reason]")
     @checks.has_any_role('muter', 'DiaAdmin') 
