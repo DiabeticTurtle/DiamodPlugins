@@ -97,8 +97,8 @@ class Moderation(commands.Cog):
                 ):
                     return await ctx.send(
                         embed=discord.Embed(
-                            title="Error",
-                            description="Muted role is already set up.",
+                            title="Already setup!",
+                            description="Muted role is already set up as {muterole}.",
                             color=discord.Color.red(),
                         ).set_footer(
                             text="If you want to change role, just mention it."
