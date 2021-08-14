@@ -268,7 +268,7 @@ class Moderation(commands.Cog):
             ).set_footer(text=f"This is the {case} case.")
         )
 
-    @commands.command(usage="<member> [reason]")
+    @commands.command(usage="<member ID>")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def unban(self, ctx, member: discord.Member, *, reason=None):
         """Unbans the specified member."""
@@ -279,7 +279,7 @@ class Moderation(commands.Cog):
         case = await self.get_case()
 
         if member.id in await self.bot.get_bans(guild):
-            await member.unban(reason=reason)
+            await ctx.guild.unban(user)
             await ctx.send(
                 embed=discord.Embed(
                     title="Success",
