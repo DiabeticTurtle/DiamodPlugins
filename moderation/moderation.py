@@ -44,7 +44,7 @@ class Moderation(commands.Cog):
             return
         await channel.set_permissions(role, send_messages=False)
 
-    @commands.command(usage="<channel>")
+    @commands.command(usage="<Channel>")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def setlog(self, ctx, channel: discord.TextChannel = None):
         """Sets up a log channel."""
@@ -83,7 +83,7 @@ class Moderation(commands.Cog):
                 )
             )
 
-    @commands.command(usage="<role>")
+    @commands.command(usage="<Role>")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def muterole(self, ctx, role: discord.Role = None):
         """Sets up the muted role."""
@@ -118,7 +118,7 @@ class Moderation(commands.Cog):
             )
         )
 
-    @commands.command(usage="<member> [reason]")
+    @commands.command(usage="<Member> [reason]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def warn(self, ctx, member: discord.Member = None, *, reason=None):
         """
@@ -166,7 +166,7 @@ class Moderation(commands.Cog):
             ).set_footer(text=f"This is the {case} case.")
         )
 
-    @commands.command(usage="<member> [reason]")
+    @commands.command(usage="<Member> [reason]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def kick(self, ctx, member: discord.Member = None, *, reason=None):
         """Kicks the specified member."""
@@ -217,7 +217,7 @@ class Moderation(commands.Cog):
             ).set_footer(text=f"This is the {case} case.")
         )
 
-    @commands.command(usage="<member> [reason]")
+    @commands.command(usage="<Member> [reason]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def ban(self, ctx, member: discord.Member = None, *, reason=None):
         """Bans the specified member."""
@@ -229,7 +229,7 @@ class Moderation(commands.Cog):
                 reason = reason + "."
 
         msg = f"You have been banned from {ctx.guild.name}" + (
-            f" for: {reason}. If you have any questions please join this server: https://discord.gg/3Dfh45GTWq and ask here." if reason else " If you have any questions please join this server: https://discord.gg/3Dfh45GTWq and ask here."
+            f" for: {reason} If you have any questions please join this server: https://discord.gg/3Dfh45GTWq and ask here." if reason else " If you have any questions please join this server: https://discord.gg/3Dfh45GTWq and ask here."
         )
 
         try:
@@ -268,7 +268,7 @@ class Moderation(commands.Cog):
             ).set_footer(text=f"This is the {case} case.")
         )
 
-    @commands.command(usage="<member ID>")
+    @commands.command(usage="<Member ID>")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def unban(self, ctx, member: discord.Member, *, reason=None):
         """Unbans the specified member."""
@@ -304,7 +304,7 @@ class Moderation(commands.Cog):
                 ).set_footer(text=f"This is the {case} case.")
             )
                         
-    @commands.command(usage="<member> [reason]")
+    @commands.command(usage="<Member> [reason]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def mute(self, ctx, member: discord.Member = None, *, reason=None):
         """Mutes the specified member."""
@@ -375,7 +375,7 @@ class Moderation(commands.Cog):
             ).set_footer(text=f"This is the {case} case.")
         )
 
-    @commands.command(usage="<member> [reason]")
+    @commands.command(usage="<Member> [reason]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def unmute(self, ctx, member: discord.Member = None, *, reason=None):
         """Unmutes the specified member."""
@@ -518,7 +518,7 @@ class Moderation(commands.Cog):
                 ).set_footer(text=f"This is the {case} case."),
             )
 
-    @commands.command(usage="<amount>")
+    @commands.command(usage="<Amount>")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def purge(self, ctx, amount: int = 1):
         """Purge the specified amount of messages."""
