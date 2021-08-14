@@ -1,6 +1,7 @@
 import asyncio
 import discord
 from discord.ext import commands
+from discord.ext.commands.core import has_role
 from core import checks
 from core.models import PermissionLevel
 
@@ -305,8 +306,7 @@ class Moderation(commands.Cog):
             )
                         
     @commands.command(usage="<Member> [reason]")
-    @checks.has_role("muter")
-    @checks.has_permissions(PermissionLevel.MODERATOR)
+    @commands.check_any(has_permissions(PermissionLevel.MODERATOR), has_role("muter")) 
     async def mute(self, ctx, member: discord.Member = None, *, reason=None):
         """Mutes the specified member."""
         if member == None:
