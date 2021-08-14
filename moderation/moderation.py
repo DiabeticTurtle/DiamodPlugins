@@ -270,7 +270,8 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    async def unban(self, ctx, *, member : discord.User = None):
+    async def unban(self, ctx, member: discord.Member = None, *):
+        """Unbans the specified member from the server."""
         if member == None:
             embed = discord.Embed(
                 title = "Unban Error",
