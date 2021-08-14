@@ -1,7 +1,7 @@
 import asyncio
 import discord
 from discord.ext import commands
-from discord.ext.commands.core import has_role
+from discord.ext.commands.core import has_permissions, has_role
 from core import checks
 from core.models import PermissionLevel
 
