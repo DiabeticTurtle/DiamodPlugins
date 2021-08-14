@@ -273,35 +273,22 @@ class Moderation(commands.Cog):
     async def unban(self, ctx, member: discord.Member = None, *):
         """Unbans the specified member from the server."""
         if member == None:
-            embed = discord.Embed(
-                title = "Unban Error",
-                description = "Please specify a user!",
-                color = self.errorcolor
-            )
-            await ctx.send(embed = embed, delete_after = 5.0)
+            return await ctx.send_help(ctx.command)
         else:
             banned_users = await ctx.guild.bans()
             for ban_entry in banned_users:
                 user = ban_entry.user
 
-                if (user.name, user.discriminator) == (member.name, member.discriminator):
-                    embed = discord.Embed(
+                if user.id == member.id: # Compare IDs
+                    await ctx.guild.unban(user)
+                    await ctx.send(
+                        embed = discord.Embed(
                         title = "Unban",
                         description = f"Unbanned {user.mention}",
                         color = self.blurple
+                    ).set_footer(text=f"This is the {ctx.command.qualified_name} case.")
                     )
-                    await ctx.guild.unban(user)
-                    await ctx.send(embed = embed)
-                    modlog = discord.utils.get(ctx.guild.text_channels, name = "modlog")
-                    if modlog == None:
-                        return
-                    if modlog != None:
-                        embed = discord.Embed(
-                            title = "Ban",
-                            description = f"{user.mention} has been unbanned by {ctx.message.author.mention} in {ctx.message.channel.mention}.",
-                            color = self.blurple
-                        )
-                        await modlog.send(embed = embed)
+                    return
                         
     @commands.command(usage="<member> [reason]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
