@@ -70,7 +70,7 @@ def human_timedelta(dt, *, source=None):
     if delta.microsecond and delta.seconds:
         delta = delta + relativedelta(seconds=+1)
 
-    attrs = ["years", "months", "days", "hours", "minutes", "seconds"]
+    attrs = ["years", "months", "days", "hours", "minutes", "seconds", "microseconds"]
 
     output = []
     for attr in attrs:
@@ -1165,7 +1165,7 @@ class Audit(commands.Cog):
         if invite.max_age == 0:
             inv_text = 'Never'
         else:
-            inv_text = human_timedelta(relativedelta(microseconds=invite.max_age))
+            inv_text = human_timedelta(relativedelta(seconds=invite.max_age))
         embed.add_field(name="Expires after", value=inv_text)
         embed.add_field(name="Max uses", value="Unlimited" if invite.max_age == 0 else str(invite.max_age))
         if invite.temporary:
