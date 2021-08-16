@@ -67,10 +67,10 @@ def human_timedelta(dt, *, source=None):
             delta = relativedelta(now, dt)
             suffix = " ago"
 
-    if delta.microsecond and delta.seconds:
-        delta = delta + relativedelta(seconds=+1)
+    ##if delta.microsecond and delta.seconds:
+    ##    delta = delta + relativedelta(seconds=+1)
 
-    attrs = ["years", "months", "days", "hours", "minutes", "seconds", "microsecond"]
+    attrs = ["years", "months", "days", "hours", "minutes", "seconds", "microseconds"]
 
     output = []
     for attr in attrs:
