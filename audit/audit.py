@@ -1162,12 +1162,12 @@ class Audit(commands.Cog):
             embed.set_footer(text=f"Inviter ID: {invite.inviter.id} | Channel ID: {invite.channel.id}")
         else:
             embed.set_footer(text=f"Inviter ID: {invite.inviter.id}")
-        if invite.max_age == 0:
-            inv_text = 'Never'
-        else:
-            inv_text = human_timedelta(relativedelta(seconds=invite.max_age))
-        embed.add_field(name="Expires after", value=inv_text)
-        embed.add_field(name="Max uses", value="Unlimited" if invite.max_age == 0 else str(invite.max_age))
+        ##if invite.max_age == 0:
+        ##    inv_text = 'Never'
+        ##else:
+        ##    inv_text = human_timedelta(relativedelta(seconds=invite.max_age))
+        ##embed.add_field(name="Expires after", value=inv_text)
+        ##embed.add_field(name="Max uses", value="Unlimited" if invite.max_age == 0 else str(invite.max_age))
         if invite.temporary:
             embed.add_field(name="Temporary membership", value=f"`Yes`")
 
