@@ -82,7 +82,7 @@ class Starboard(commands.Cog):
         await self._update_db()
 
         await ctx.send(
-            f"Done. Now this server needs `{stars}` :goldinsulin:  to appear on the starboard channel."
+            f"Done. Now this server needs `{stars}` <:goldinsulin:876986067075612672> to appear on the starboard channel."
         )
 
     @starboard.group()
