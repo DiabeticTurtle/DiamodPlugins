@@ -180,7 +180,7 @@ class Starboard(commands.Cog):
 
         found_emote = False
         for emote in message.reactions:
-            if emote.emoji == ":star:":
+            if emote.emoji == "⭐":
                 found_emote = True
                 reaction: discord.Reaction = emote
                 count = reaction.count
