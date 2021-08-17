@@ -178,7 +178,7 @@ class Starboard(commands.Cog):
 
         found_emote = False
         for emote in message.reactions:
-            if discord.emoji == ":goldinsulin:":
+            if discord.emoji == "<:goldinsulin:876986067075612672>":
                 found_emote = True
                 reaction: discord.Reaction = emote
                 count = reaction.count
@@ -203,7 +203,7 @@ class Starboard(commands.Cog):
                         logger.info("No embeds")
                         continue
 
-                    if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "⭐" not in msg.embeds[
+                    if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "<:goldinsulin:876986067075612672>" not in msg.embeds[
                         0].footer.text:
                         print(msg.embeds)
                         logger.info("No stars")
