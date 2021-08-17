@@ -4,6 +4,7 @@ from datetime import datetime
 import discord
 from discord import Client
 from discord.ext import commands
+from discord import emoji
 
 from core import checks
 from core.models import PermissionLevel, getLogger
@@ -150,6 +151,7 @@ class Starboard(commands.Cog):
 
     async def handle_reaction(self, payload: discord.RawReactionActionEvent):
         config = await self.db.find_one({"_id": "config"})
+        global emojis
 
         if not config or not self.channel:
             logger.info("No config or channel")
@@ -178,7 +180,7 @@ class Starboard(commands.Cog):
 
         found_emote = False
         for emote in message.reactions:
-            if discord.emoji == "<:goldinsulin:876986067075612672>":
+            if emote.emoji == "<:goldinsulin:876986067075612672>":
                 found_emote = True
                 reaction: discord.Reaction = emote
                 count = reaction.count
