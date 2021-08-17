@@ -219,7 +219,7 @@ class Starboard(commands.Cog):
                             await msg.delete()
                             break
                         e = msg.embeds[0]
-                        e.set_footer(text=f" {count} | {payload.message_id}", icon_url="https://cdn.discordapp.com/attachments/590818115756097537/877291162833154078/emoji.png")
+                        e.set_footer(text=f"{count} | {payload.message_id}", icon_url="https://cdn.discordapp.com/attachments/590818115756097537/877291162833154078/emoji.png")
                         await msg.edit(content=f"<#{payload.channel_id}>", embed=e)
                         break
 
