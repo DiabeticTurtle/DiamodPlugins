@@ -175,7 +175,7 @@ class Starboard(commands.Cog):
 
         found_emote = False
         for emote in message.reactions:
-            if emote.emoji == "⭐":
+            if emote.emoji == "<:goldinsulin:876986067075612672>":
                 found_emote = True
                 reaction: discord.Reaction = emote
                 count = reaction.count
@@ -214,7 +214,7 @@ class Starboard(commands.Cog):
                             await msg.delete()
                             break
                         e = msg.embeds[0]
-                        e.set_footer(text=f"⭐ {count} | {payload.message_id}")
+                        e.set_footer(text=f"<:goldinsulin:876986067075612672> {count} | {payload.message_id}")
                         await msg.edit(content=f"<#{payload.channel_id}>", embed=e)
                         break
 
@@ -234,7 +234,7 @@ class Starboard(commands.Cog):
                         name=str(message.author),
                         icon_url=message.author.avatar_url,
                     )
-                    embed.set_footer(text=f"⭐ {count} | {payload.message_id}")
+                    embed.set_footer(text=f"<:goldinsulin:876986067075612672> {count} | {payload.message_id}")
                     if len(message.attachments) > 1:
                         try:
                             embed.set_image(url=message.attachments[0].url)
@@ -257,7 +257,7 @@ class Starboard(commands.Cog):
                     logger.info("No embeds")
                     continue
 
-                if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "⭐" not in msg.embeds[0].footer.text:
+                if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "<:goldinsulin:876986067075612672>" not in msg.embeds[0].footer.text:
                     print(msg.embeds)
                     logger.info("No stars")
                     continue
