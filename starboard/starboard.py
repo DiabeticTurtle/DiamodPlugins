@@ -52,6 +52,9 @@ class Starboard(commands.Cog):
         self.user_blacklist = config["blacklist"]["user"]
         self.channel_blacklist = config["blacklist"]["channel"]
 
+    async def custom_emoji(self, emoji: discord.Emoji):
+        return emoji.name
+
     @commands.group(aliases=["st", "sb"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.ADMIN)
     async def starboard(self, ctx: commands.Context):
@@ -170,12 +173,12 @@ class Starboard(commands.Cog):
         message: discord.Message = await channel.fetch_message(payload.message_id)
 
         if message.author.id == payload.user_id:
-            logger.info("Author added the reaction")
+            logger.info("Author added the reaction") 
             return
 
         found_emote = False
         for emote in message.reactions:
-            if emote.emoji == ":goldinsulin:":
+            if emote.emoji == "876986067075612672":
                 found_emote = True
                 reaction: discord.Reaction = emote
                 count = reaction.count
@@ -266,6 +269,9 @@ class Starboard(commands.Cog):
                     logger.info("got one")
                     found = True
                     await msg.delete()
+
+    def new_method(emojis):
+        string = ""
 
 
 def setup(bot):
