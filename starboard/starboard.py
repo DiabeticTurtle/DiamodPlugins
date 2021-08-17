@@ -236,7 +236,7 @@ class Starboard(commands.Cog):
                         url=message.jump_url
                     )
                     embed.set_author(
-                        name=str(message.author),
+                        name=str(message.author.display_name),
                         icon_url=message.author.avatar_url,
                     )
                     embed.set_footer(text=f"{count} | {payload.message_id}", icon_url="https://cdn.discordapp.com/attachments/590818115756097537/877291162833154078/emoji.png")
