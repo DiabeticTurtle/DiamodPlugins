@@ -173,12 +173,12 @@ class Starboard(commands.Cog):
         message: discord.Message = await channel.fetch_message(payload.message_id)
 
         if message.author.id == payload.user_id:
-            logger.info("Author added the reaction") 
+            logger.info("Author added the reaction")
             return
 
         found_emote = False
         for emote in message.reactions:
-            if emote.emoji == "876986067075612672":
+            if discord.emoji == ":goldinsulin:":
                 found_emote = True
                 reaction: discord.Reaction = emote
                 count = reaction.count
