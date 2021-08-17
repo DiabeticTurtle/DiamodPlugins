@@ -205,7 +205,7 @@ class Starboard(commands.Cog):
                         logger.info("No embeds")
                         continue
 
-                    if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "<:goldinsulin:876986067075612672>" not in msg.embeds[
+                    if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "⭐" not in msg.embeds[
                         0].footer.text:
                         print(msg.embeds)
                         logger.info("No stars")
