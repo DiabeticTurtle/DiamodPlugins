@@ -220,6 +220,7 @@ class Starboard(commands.Cog):
                             break
                         e = msg.embeds[0]
                         e.set_footer(text=f"<:goldinsulin:876986067075612672> {count} | {payload.message_id}")
+                        e.set_footer_icon(text=f"https://cdn.discordapp.com/attachments/590818115756097537/877291162833154078/emoji.png")
                         await msg.edit(content=f"<#{payload.channel_id}>", embed=e)
                         break
 
