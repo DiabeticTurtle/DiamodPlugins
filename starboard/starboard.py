@@ -182,7 +182,7 @@ class Starboard(commands.Cog):
 
         found_emote = False
         for emote in message.reactions:
-            if emote.id == "<:goldinsulin:876986067075612672>":
+            if emote.emoji.id == "<:goldinsulin:876986067075612672>":
                 found_emote = True
                 reaction: discord.Reaction = emote
                 count = reaction.count
