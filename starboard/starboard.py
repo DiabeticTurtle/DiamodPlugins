@@ -4,7 +4,6 @@ from datetime import datetime
 import discord
 from discord import Client
 from discord.ext import commands
-from discord import emoji
 
 from core import checks
 from core.models import PermissionLevel, getLogger
@@ -53,9 +52,6 @@ class Starboard(commands.Cog):
         self.user_blacklist = config["blacklist"]["user"]
         self.channel_blacklist = config["blacklist"]["channel"]
 
-    async def custom_emoji(self, emoji: discord.Emoji):
-        return emoji.name
-
     @commands.group(aliases=["st", "sb"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.ADMIN)
     async def starboard(self, ctx: commands.Context):
@@ -86,7 +82,7 @@ class Starboard(commands.Cog):
         await self._update_db()
 
         await ctx.send(
-            f"Done. Now this server needs `{stars}` <:goldinsulin:876986067075612672> to appear on the starboard channel."
+            f"Done.Now this server needs `{stars}` :star: to appear on the starboard channel."
         )
 
     @starboard.group()
@@ -146,8 +142,6 @@ class Starboard(commands.Cog):
         await self.handle_reaction(payload=payload)
 
     @commands.Cog.listener()
-    async def custom_emoji(self, emoji: discord.Emoji):
-        return emoji.name
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         await self.handle_reaction(payload=payload)
 
@@ -206,7 +200,7 @@ class Starboard(commands.Cog):
                         logger.info("No embeds")
                         continue
 
-                    if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "<:goldinsulin:876986067075612672>" not in msg.embeds[
+                    if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "⭐" not in msg.embeds[
                         0].footer.text:
                         print(msg.embeds)
                         logger.info("No stars")
@@ -220,7 +214,7 @@ class Starboard(commands.Cog):
                             await msg.delete()
                             break
                         e = msg.embeds[0]
-                        e.set_footer(text=f"{count} | {payload.message_id}", icon_url="https://cdn.discordapp.com/attachments/590818115756097537/877291162833154078/emoji.png")
+                        e.set_footer(text=f"⭐ {count} | {payload.message_id}")
                         await msg.edit(content=f"<#{payload.channel_id}>", embed=e)
                         break
 
@@ -237,10 +231,10 @@ class Starboard(commands.Cog):
                         url=message.jump_url
                     )
                     embed.set_author(
-                        name=str(message.author.display_name),
+                        name=str(message.author),
                         icon_url=message.author.avatar_url,
                     )
-                    embed.set_footer(text=f"{count} | {payload.message_id}", icon_url="https://cdn.discordapp.com/attachments/590818115756097537/877291162833154078/emoji.png")
+                    embed.set_footer(text=f"⭐ {count} | {payload.message_id}")
                     if len(message.attachments) > 1:
                         try:
                             embed.set_image(url=message.attachments[0].url)
@@ -263,7 +257,7 @@ class Starboard(commands.Cog):
                     logger.info("No embeds")
                     continue
 
-                if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "<:goldinsulin:876986067075612672>" not in msg.embeds[0].footer.text:
+                if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "⭐" not in msg.embeds[0].footer.text:
                     print(msg.embeds)
                     logger.info("No stars")
                     continue
