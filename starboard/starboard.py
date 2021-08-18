@@ -146,12 +146,13 @@ class Starboard(commands.Cog):
         await self.handle_reaction(payload=payload)
 
     @commands.Cog.listener()
+    async def custom_emoji(self, emoji: discord.Emoji):
+        return emoji.name
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         await self.handle_reaction(payload=payload)
 
     async def handle_reaction(self, payload: discord.RawReactionActionEvent):
         config = await self.db.find_one({"_id": "config"})
-        global emojis
 
         if not config or not self.channel:
             logger.info("No config or channel")
