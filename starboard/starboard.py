@@ -165,6 +165,7 @@ class Starboard(commands.Cog):
             return
 
         guild: discord.Guild = self.bot.get_guild(int(self.bot.config["guild_id"]))
+        custom_emoji: discord.Emoji = await self.bot.get_emoji(int(config["goldinsulin"]))
         starboard_channel: discord.TextChannel = guild.get_channel(int(self.channel))
         channel: discord.TextChannel = guild.get_channel(payload.channel_id)
         user: discord.User = await self.bot.fetch_user(payload.user_id)
@@ -181,7 +182,7 @@ class Starboard(commands.Cog):
 
         found_emote = False
         for emote in message.reactions:
-            if discord.emoji == "<:goldinsulin:876986067075612672>":
+            if emote.id == "<:goldinsulin:876986067075612672>":
                 found_emote = True
                 reaction: discord.Reaction = emote
                 count = reaction.count
