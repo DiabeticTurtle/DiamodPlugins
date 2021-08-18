@@ -234,7 +234,7 @@ class Starboard(commands.Cog):
                         name=str(message.author),
                         icon_url=message.author.avatar_url,
                     )
-                    embed.set_footer(text=f"⭐ {count} | {payload.message_id}")
+                    embed.set_footer(text=f"{count} | {payload.message_id}", icon_url="https://cdn.discordapp.com/attachments/590818115756097537/877291162833154078/emoji.png")
                     if len(message.attachments) > 1:
                         try:
                             embed.set_image(url=message.attachments[0].url)
