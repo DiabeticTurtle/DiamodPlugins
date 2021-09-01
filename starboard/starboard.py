@@ -257,11 +257,6 @@ class Starboard(commands.Cog):
                     logger.info("No embeds")
                     continue
 
-                #if not msg.embeds[0].footer or not msg.embeds[0].footer.text or "⭐" not in msg.embeds[0].footer.text:
-                #    print(msg.embeds)
-                #    logger.info("No stars")
-                #    continue
-
                 if msg.embeds[0].footer.text.endswith(str(payload.message_id)):
                     logger.info("got one")
                     found = True
