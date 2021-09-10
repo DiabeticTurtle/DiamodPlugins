@@ -136,7 +136,7 @@ class Audit(commands.Cog):
         if os.path.exists(self.store_path):
             with open(self.store_path, 'rb') as f:
                 try:
-                    self.enabled, self.ignored_channel_ids, self.ignored_category_ids = pickle.load(f)
+                    self.all, self.ignored_channel_ids, self.ignored_category_ids = pickle.load(f)
                 except pickle.UnpicklingError:
                     self.ignored_channel_ids = defaultdict(set)
                     self.ignored_category_ids = defaultdict(set)
@@ -144,7 +144,7 @@ class Audit(commands.Cog):
         else:
             self.ignored_channel_ids = defaultdict(set)
             self.ignored_category_ids = defaultdict(set)
-            self.all = defaultdict(set)
+            self.enabled = defaultdict(set)
         self.save_pickle.start()
 
     async def send_webhook(self, guild, *args, **kwargs):
@@ -194,7 +194,7 @@ class Audit(commands.Cog):
         print('saving HotPickle')
         with open(self.store_path, 'wb') as f:
             try:
-                pickle.dump((self.all, self.ignored_channel_ids, self.ignored_category_ids), f)
+                pickle.dump((self.enabled, self.ignored_channel_ids, self.ignored_category_ids), f)
             except pickle.PickleError:
                 print('Failed to save pickle')
 
