@@ -35,8 +35,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import datetime
 from io import BytesIO
 from json import JSONDecodeError
+import logging
 from urllib.parse import urlparse
 import re
+from logging import getLogger
 import typing
 from collections import defaultdict
 import pickle
@@ -65,10 +67,10 @@ def human_timedelta(dt, *, source=None):
             delta = relativedelta(now, dt)
             suffix = " ago"
 
-    if delta.microsecond and delta.seconds:
-        delta = delta + relativedelta(seconds=+1)
+    ##if delta.microsecond and delta.seconds:
+    ##    delta = delta + relativedelta(seconds=+1)
 
-    attrs = ["years", "months", "days", "hours", "minutes", "seconds"]
+    attrs = ["years", "months", "days", "hours", "minutes", "seconds", "microseconds"]
 
     output = []
     for attr in attrs:
@@ -87,7 +89,7 @@ def human_timedelta(dt, *, source=None):
         return output[0] + suffix
     if len(output) == 2:
         return f"{output[0]} and {output[1]}{suffix}"
-    return f"{output[0]}, {output[1]} and {output[2]}{suffix}"
+    return f"{output[0]}, {output[1]} and {output[2]}{suffix}" 
 
 
 class Audit(commands.Cog):
@@ -101,8 +103,10 @@ class Audit(commands.Cog):
         self.acname = "severe-logs"
         self._webhooks = {}
         self._webhook_locks = {}
-
-         self.all = (
+        self.db = bot.plugin_db.get_partition(self)
+        self.logger = logging.getLogger(__name__)
+            
+        self.all = (
             'message delete',
             'message purge',
             'member nickname',
@@ -122,8 +126,11 @@ class Audit(commands.Cog):
             'invites',
             'invite create',
             'invite delete'
+            
+        
         )
 
+        self.db.find_one({'_id': 'enabled'})
         self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.store_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'store.pkl')
         if os.path.exists(self.store_path):
