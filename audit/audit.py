@@ -35,10 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import datetime
 from io import BytesIO
 from json import JSONDecodeError
-import logging
 from urllib.parse import urlparse
 import re
-from logging import getLogger
 import typing
 from collections import defaultdict
 import pickle
@@ -67,10 +65,10 @@ def human_timedelta(dt, *, source=None):
             delta = relativedelta(now, dt)
             suffix = " ago"
 
-    ##if delta.microsecond and delta.seconds:
-    ##    delta = delta + relativedelta(seconds=+1)
+    if delta.microsecond and delta.seconds:
+        delta = delta + relativedelta(seconds=+1)
 
-    attrs = ["years", "months", "days", "hours", "minutes", "seconds", "microseconds"]
+    attrs = ["years", "months", "days", "hours", "minutes", "seconds"]
 
     output = []
     for attr in attrs:
@@ -89,7 +87,7 @@ def human_timedelta(dt, *, source=None):
         return output[0] + suffix
     if len(output) == 2:
         return f"{output[0]} and {output[1]}{suffix}"
-    return f"{output[0]}, {output[1]} and {output[2]}{suffix}" 
+    return f"{output[0]}, {output[1]} and {output[2]}{suffix}"
 
 
 class Audit(commands.Cog):
@@ -103,9 +101,7 @@ class Audit(commands.Cog):
         self.acname = "severe-logs"
         self._webhooks = {}
         self._webhook_locks = {}
-        self.db = bot.plugin_db.get_partition(self)
-        self.logger = logging.getLogger(__name__)
-            
+
         self.all = (
             'message delete',
             'message purge',
@@ -126,11 +122,8 @@ class Audit(commands.Cog):
             'invites',
             'invite create',
             'invite delete'
-            
-        
         )
 
-        self.db.find_one({'_id': 'enabled'})
         self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.store_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'store.pkl')
         if os.path.exists(self.store_path):
@@ -191,7 +184,7 @@ class Audit(commands.Cog):
         return lock
 
     def _save_pickle(self):
-        print('saving HotPickle')
+        print('saving pickle')
         with open(self.store_path, 'wb') as f:
             try:
                 pickle.dump((self.enabled, self.ignored_channel_ids, self.ignored_category_ids), f)
@@ -208,7 +201,7 @@ class Audit(commands.Cog):
 
     @commands.group()
     async def audit(self, ctx):
-        """Audit logs, copied from Mee6."""
+        """Audit logs, copied from mee6."""
 
     @audit.command()
     async def ignore(self, ctx, *, channel: typing.Union[discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel]):
