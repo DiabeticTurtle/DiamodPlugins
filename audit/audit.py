@@ -194,7 +194,7 @@ class Audit(commands.Cog):
         print('saving HotPickle')
         with open(self.store_path, 'wb') as f:
             try:
-                pickle.dump((self.enabled, self.ignored_channel_ids, self.ignored_category_ids), f)
+                pickle.dump((self.all, self.ignored_channel_ids, self.ignored_category_ids), f)
             except pickle.PickleError:
                 print('Failed to save pickle')
 
