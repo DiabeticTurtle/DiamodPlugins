@@ -99,7 +99,7 @@ class Audit(commands.Cog):
         self.db = bot.plugin_db.get_partition(self)
         self.logger = logging.getLogger(__name__)
             
-        self.all = (
+        self.enabled = (
             'message delete',
             'message purge',
             'member nickname',
