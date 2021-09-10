@@ -103,7 +103,6 @@ class Audit(commands.Cog):
         self.acname = "severe-logs"
         self._webhooks = {}
         self._webhook_locks = {}
-        self.db = bot.plugin_db.get_partition(self)
         self.logger = logging.getLogger(__name__)
             
         self.all = (
@@ -130,7 +129,7 @@ class Audit(commands.Cog):
         
         )
 
-        ##self.db.find_one({'_id': 'enabled'})
+
         self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.store_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'store.pkl')
         if os.path.exists(self.store_path):
