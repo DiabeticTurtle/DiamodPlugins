@@ -103,7 +103,6 @@ class Audit(commands.Cog):
         self.acname = "severe-logs"
         self._webhooks = {}
         self._webhook_locks = {}
-        self.logger = logging.getLogger(__name__)
             
         self.all = (
             'message delete',
@@ -125,10 +124,7 @@ class Audit(commands.Cog):
             'invites',
             'invite create',
             'invite delete'
-            
-        
         )
-
 
         self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.store_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'store.pkl')
