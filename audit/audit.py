@@ -1,23 +1,17 @@
 """
 BSD 3-Clause License
-
 Copyright (c) 2020, taku#0621 (Discord)
 All rights reserved.
-
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
-
 1. Redistributions of source code must retain the above copyright notice, this
    list of conditions and the following disclaimer.
-
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
-
 3. Neither the name of the copyright holder nor the names of its
    contributors may be used to endorse or promote products derived from
    this software without specific prior written permission.
-
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -28,7 +22,6 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 
 
@@ -67,10 +60,10 @@ def human_timedelta(dt, *, source=None):
             delta = relativedelta(now, dt)
             suffix = " ago"
 
-    if delta.microsecond and delta.seconds:
-        delta = delta + relativedelta(seconds=+1)
+    ##if delta.microsecond and delta.seconds:
+    ##    delta = delta + relativedelta(seconds=+1)
 
-    attrs = ["years", "months", "days", "hours", "minutes", "seconds"]
+    attrs = ["years", "months", "days", "hours", "minutes", "seconds", "microseconds"]
 
     output = []
     for attr in attrs:
@@ -122,7 +115,6 @@ class Audit(commands.Cog):
             'server edited',
             'server emoji',
             'channel create',
-            'channel update',
             'channel delete',
             'invites',
             'invite create',
@@ -1163,12 +1155,12 @@ class Audit(commands.Cog):
             embed.set_footer(text=f"Inviter ID: {invite.inviter.id} | Channel ID: {invite.channel.id}")
         else:
             embed.set_footer(text=f"Inviter ID: {invite.inviter.id}")
-        if invite.max_age == 0:
-            inv_text = 'Never'
-        else:
-            inv_text = human_timedelta(relativedelta(seconds=invite.max_age))
-        embed.add_field(name="Expires after", value=inv_text)
-        embed.add_field(name="Max uses", value="Unlimited" if invite.max_age == 0 else str(invite.max_age))
+        ##if invite.max_age == 0:
+        ##    inv_text = 'Never'
+        ##else:
+        ##    inv_text = human_timedelta(relativedelta(seconds=invite.max_age))
+        ##embed.add_field(name="Expires after", value=inv_text)
+        ##embed.add_field(name="Max uses", value="Unlimited" if invite.max_age == 0 else str(invite.max_age))
         if invite.temporary:
             embed.add_field(name="Temporary membership", value=f"`Yes`")
 
