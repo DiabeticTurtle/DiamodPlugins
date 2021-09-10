@@ -130,7 +130,7 @@ class Audit(commands.Cog):
         
         )
 
-        self.db.find_one({'_id': 'enabled'})
+        ##self.db.find_one({'_id': 'enabled'})
         self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.store_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'store.pkl')
         if os.path.exists(self.store_path):
