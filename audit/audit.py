@@ -35,8 +35,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import datetime
 from io import BytesIO
 from json import JSONDecodeError
+import logging
 from urllib.parse import urlparse
 import re
+from logging import getLogger
 import typing
 from collections import defaultdict
 import pickle
@@ -87,7 +89,7 @@ def human_timedelta(dt, *, source=None):
         return output[0] + suffix
     if len(output) == 2:
         return f"{output[0]} and {output[1]}{suffix}"
-    return f"{output[0]}, {output[1]} and {output[2]}{suffix}"
+    return f"{output[0]}, {output[1]} and {output[2]}{suffix}" 
 
 
 class Audit(commands.Cog):
@@ -101,7 +103,9 @@ class Audit(commands.Cog):
         self.acname = "severe-logs"
         self._webhooks = {}
         self._webhook_locks = {}
-
+        self.db = bot.plugin_db.get_partition(self)
+        self.logger = logging.getLogger(__name__)
+            
         self.all = (
             'message delete',
             'message purge',
@@ -118,12 +122,16 @@ class Audit(commands.Cog):
             'server edited',
             'server emoji',
             'channel create',
+            'channel update',
             'channel delete',
             'invites',
             'invite create',
             'invite delete'
+            
+        
         )
 
+        self.db.find_one({'_id': 'enabled'})
         self.session = aiohttp.ClientSession(loop=self.bot.loop)
         self.store_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'store.pkl')
         if os.path.exists(self.store_path):
@@ -184,7 +192,7 @@ class Audit(commands.Cog):
         return lock
 
     def _save_pickle(self):
-        print('saving pickle')
+        print('saving HotPickle')
         with open(self.store_path, 'wb') as f:
             try:
                 pickle.dump((self.enabled, self.ignored_channel_ids, self.ignored_category_ids), f)
@@ -201,7 +209,7 @@ class Audit(commands.Cog):
 
     @commands.group()
     async def audit(self, ctx):
-        """Audit logs, copied from mee6."""
+        """Audit logs, copied from Mee6."""
 
     @audit.command()
     async def ignore(self, ctx, *, channel: typing.Union[discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel]):
@@ -1155,12 +1163,12 @@ class Audit(commands.Cog):
             embed.set_footer(text=f"Inviter ID: {invite.inviter.id} | Channel ID: {invite.channel.id}")
         else:
             embed.set_footer(text=f"Inviter ID: {invite.inviter.id}")
-        ##if invite.max_age == 0:
-        ##    inv_text = 'Never'
-        ##else:
-        ##    inv_text = human_timedelta(relativedelta(seconds=invite.max_age))
-        ##embed.add_field(name="Expires after", value=inv_text)
-        ##embed.add_field(name="Max uses", value="Unlimited" if invite.max_age == 0 else str(invite.max_age))
+        if invite.max_age == 0:
+            inv_text = 'Never'
+        else:
+            inv_text = human_timedelta(relativedelta(seconds=invite.max_age))
+        embed.add_field(name="Expires after", value=inv_text)
+        embed.add_field(name="Max uses", value="Unlimited" if invite.max_age == 0 else str(invite.max_age))
         if invite.temporary:
             embed.add_field(name="Temporary membership", value=f"`Yes`")
 
