@@ -136,7 +136,7 @@ class Audit(commands.Cog):
         if os.path.exists(self.store_path):
             with open(self.store_path, 'rb') as f:
                 try:
-                    self.all, self.ignored_channel_ids, self.ignored_category_ids = pickle.load(f)
+                    self.enabled, self.ignored_channel_ids, self.ignored_category_ids = pickle.load(f)
                 except pickle.UnpicklingError:
                     self.ignored_channel_ids = defaultdict(set)
                     self.ignored_category_ids = defaultdict(set)
