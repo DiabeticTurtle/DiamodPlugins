@@ -88,6 +88,7 @@ def human_timedelta(dt, *, source=None):
 class Audit(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.db = bot.plugin_db.get_partition(self)
         self.upload_url = f"https://api.cloudinary.com/v1_1/taku/image/upload"
         self.invite_regex = re.compile(
             r"(?:https?://)?(?:www\.)?(?:discord\.(?:gg|io|me|li)|(?:discordapp|discord)\.com/invite)/[\w]+"
@@ -96,7 +97,6 @@ class Audit(commands.Cog):
         self.acname = "severe-logs"
         self._webhooks = {}
         self._webhook_locks = {}
-        self.db = bot.plugin_db.get_partition(self)
         self.logger = logging.getLogger(__name__)
             
         self.all = (
@@ -139,6 +139,7 @@ class Audit(commands.Cog):
             self.ignored_category_ids = defaultdict(set)
             self.enabled = defaultdict(set)
         self.save_pickle.start()
+        self.enabled[257554742371155998] = set(self.all)
 
     async def send_webhook(self, guild, *args, **kwargs):
         async with self.webhook_lock(guild.id):
