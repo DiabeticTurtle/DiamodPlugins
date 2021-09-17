@@ -635,7 +635,7 @@ class Audit(commands.Cog):
                 await self._user_update(guild, before, after)
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_join(self, member, invite):
 
         if not self.c('member join', member.guild):
             return
