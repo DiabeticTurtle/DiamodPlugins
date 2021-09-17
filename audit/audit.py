@@ -649,7 +649,7 @@ class Audit(commands.Cog):
             self.invites[member.guild.id] = invs_after
             for invite in invs_before:
                 if invite.uses < self.find_invite_by_code(invs_after, invite.code).uses:
-                    eme.add_field(name="Used invite",
+                    embed.add_field(name="Used invite",
                                   value=f"Inviter: {invite.inviter.mention} (`{invite.inviter}` | `{str(invite.inviter.id)}`)\nCode: `{invite.code}`\nUses: ` {str(invite.uses)} `", inline=False)
         except:
             pass
