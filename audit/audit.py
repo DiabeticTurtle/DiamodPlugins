@@ -643,16 +643,8 @@ class Audit(commands.Cog):
         embed.colour = discord.Colour.green()
         embed.description = f"**:inbox_tray: {member.mention} joined the server**"
         embed.add_field(name="Account creation", value=human_timedelta(member.created_at))
-        try:
-            invs_before = self.invites[member.guild.id]
-            invs_after = await member.guild.invites()
-            self.invites[member.guild.id] = invs_after
-            for invite in invs_before:
-                if invite.uses < self.find_invite_by_code(invs_after, invite.code).uses:
-                    embed.add_field(name="Used invite",
-                                  value=f"Inviter: {invite.inviter.mention} (`{invite.inviter}` | `{str(invite.inviter.id)}`)\nCode: `{invite.code}`\nUses: ` {str(invite.uses)} `", inline=False)
-        except:
-            pass
+        embed.add_field(name="Used invite", value=f"Inviter: {invite.inviter.mention} (`{invite.inviter}` | `{str(invite.inviter.id)}`)\nCode: `{invite.code}`\nUses: ` {str(invite.uses)} `", inline=False)
+
         await self.send_webhook(member.guild, embed=embed)
 
 
