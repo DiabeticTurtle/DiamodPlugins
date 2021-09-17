@@ -635,13 +635,15 @@ class Audit(commands.Cog):
                 await self._user_update(guild, before, after)
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_join(self, member, invite):
         if not self.c('member join', member.guild):
             return
         embed = self.user_base_embed(member, user_update=True)
         embed.colour = discord.Colour.green()
         embed.description = f"**:inbox_tray: {member.mention} joined the server**"
         embed.add_field(name="Account creation", value=human_timedelta(member.created_at))
+        embed.add_field(name="used invite", value="Inviter: " + invite.inviter.mention + " (`" + invite.inviter.name + "#" + invite.inviter.discriminator + "` | `" + str(invite.inviter.id) + "`)\nCode: `" + invite.code + "`\nUses: `" + str(
+                                          invite.uses) + "`")
         await self.send_webhook(member.guild, embed=embed)
 
     @commands.Cog.listener()
