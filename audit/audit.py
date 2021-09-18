@@ -63,7 +63,7 @@ def human_timedelta(dt, *, source=None):
     ##if delta.microsecond and delta.seconds:
     ##    delta = delta + relativedelta(seconds=+1)
 
-    attrs = ["years", "months", "days", "hours", "minutes", "seconds", "microseconds"]
+    attrs = ["years", "months", "days", "hours", "minutes", "seconds"]
 
     output = []
     for attr in attrs:
