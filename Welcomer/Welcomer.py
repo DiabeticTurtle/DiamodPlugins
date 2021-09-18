@@ -66,10 +66,12 @@ class Welcomer(commands.Cog):
             else:
                 message = None
         return message
+    
+    
 
     @commands.has_permissions(manage_guild=True)
     @commands.command()
-    async def welcomer(self, ctx, channel: discord.TextChannel, *, message):
+    async def welcomer(self, ctx, after, channel: discord.TextChannel, *, message):
         """Sets up welcome command. Check [here](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)
         for complex usage.
         """
@@ -85,6 +87,7 @@ class Welcomer(commands.Cog):
 
         formatted_message = self.format_message(ctx.author, message, SafeString('{invite}'))
         if formatted_message:
+            await after.guild_member_update.pending(0)
             await channel.send(**formatted_message)
             await self.db.find_one_and_update(
                 {'_id': 'config'},
@@ -96,21 +99,28 @@ class Welcomer(commands.Cog):
             await ctx.send('Invalid welcome message syntax.')
 
     @commands.Cog.listener()
-    async def on_member_join(self, before, after, member):
+    async def on_member_join(self, member, message, invite):
         invite = await self.get_used_invite(member.guild)
-        ver = after.pending(0)
         config = (await self.db.find_one({'_id': 'config'}))['welcomer']
         if config:
             channel = member.guild.get_channel(int(config['channel']))
             if channel:
                 message = self.format_message(member, config['message'], invite)
                 if message:
-                    await ver
                     await channel.send (**message)
                 else:
                     await channel.send('Invalid welcome message')
             else:
                 print('Welcomer plugin not found: {getattr(channel, "id", None}')
+
+    @commands.Cog.listener()
+    async def on_member_join(member: discord.Member):
+        print(f'{member} joined {member.guild}')
+    
+    @commands.Cog.listener()
+    async def on_member_update(before: discord.Member, after: discord.Member):
+        if before.pending != after.pending:
+            print(f'before: {before.pending}, after: {after.pending}')
 
 
 def setup(bot):
