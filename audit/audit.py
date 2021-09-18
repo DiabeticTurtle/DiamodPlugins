@@ -655,6 +655,7 @@ class Audit(commands.Cog):
         embed = self.user_base_embed(member, user_update=True)
         embed.colour = discord.Colour.red()
         embed.add_field(name="Joined server", value=human_timedelta(member.joined_at))
+        embed.add_field(name="Account creation", value=human_timedelta(member.created_at))
         embed.description = f"**:outbox_tray: {member.mention} left the server**"
         await self.send_webhook(member.guild, embed=embed)
 
