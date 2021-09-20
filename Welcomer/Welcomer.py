@@ -87,7 +87,6 @@ class Welcomer(commands.Cog):
 
         formatted_message = self.format_message(ctx.author, message, SafeString('{invite}'))
         if formatted_message:
-            await after.guild_member_update.pending(0)
             await channel.send(**formatted_message)
             await self.db.find_one_and_update(
                 {'_id': 'config'},
@@ -117,10 +116,7 @@ class Welcomer(commands.Cog):
     async def on_member_join(member: discord.Member):
         print(f'{member} joined {member.guild}')
     
-    @commands.Cog.listener()
-    async def on_member_update(before: discord.Member, after: discord.Member):
-        if before.pending != after.pending:
-            print(f'before: {before.pending}, after: {after.pending}')
+
 
 
 def setup(bot):
