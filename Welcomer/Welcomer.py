@@ -66,8 +66,6 @@ class Welcomer(commands.Cog):
             else:
                 message = None
         return message
-    
-    
 
     @commands.has_permissions(manage_guild=True)
     @commands.command()
@@ -98,7 +96,7 @@ class Welcomer(commands.Cog):
             await ctx.send('Invalid welcome message syntax.')
 
     @commands.Cog.listener()
-    async def on_member_join(self, member, message, invite):
+    async def on_member_join(self, member):
         invite = await self.get_used_invite(member.guild)
         config = (await self.db.find_one({'_id': 'config'}))['welcomer']
         if config:
@@ -106,17 +104,11 @@ class Welcomer(commands.Cog):
             if channel:
                 message = self.format_message(member, config['message'], invite)
                 if message:
-                    await channel.send (**message)
+                    await channel.send(**message)
                 else:
                     await channel.send('Invalid welcome message')
             else:
                 print('Welcomer plugin not found: {getattr(channel, "id", None}')
-
-    @commands.Cog.listener()
-    async def on_member_join(member: discord.Member):
-        print(f'{member} joined {member.guild}')
-    
-
 
 
 def setup(bot):
