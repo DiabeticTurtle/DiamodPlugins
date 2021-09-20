@@ -71,7 +71,7 @@ class Welcomer(commands.Cog):
 
     @commands.has_permissions(manage_guild=True)
     @commands.command()
-    async def welcomer(self, ctx, after, channel: discord.TextChannel, *, message):
+    async def welcomer(self, ctx, channel: discord.TextChannel, *, message):
         """Sets up welcome command. Check [here](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)
         for complex usage.
         """
