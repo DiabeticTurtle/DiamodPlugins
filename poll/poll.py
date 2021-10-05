@@ -88,8 +88,8 @@ class Polls(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             return await ctx.send("Missing the question.")
 
-    @poll.command(aliases=[qp])
-    @commands.guild_only()
+    @poll.command()
+    @commands.guild_only(aliases=[qp])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def quick(self, ctx, *questions_and_choices: str):
         """Makes a poll quickly.
@@ -122,7 +122,7 @@ class Polls(commands.Cog):
             )
             embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
             poll = await ctx.send(embed=embed)
-            reactions = ["👍", "👎"]
+            reactions = ["✅", "❌"]
             for emoji in reactions:
                 await poll.add_reaction(emoji)
 
