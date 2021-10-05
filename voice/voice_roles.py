@@ -19,11 +19,12 @@ class VoiceRolePlugin(commands.Cog):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ):
+
         # user just joined a channel.
         if not before.channel and after.channel:
             try:
                 await member.add_roles(
-                    ROLE_ID,
+                    discord.Object(ROLE_ID),
                     reason=f"Automatically done for joining voice channel {after.channel}",
                 )
             except discord.Forbidden:
@@ -33,7 +34,7 @@ class VoiceRolePlugin(commands.Cog):
         if before.channel and not after.channel:
             try:
                 await member.remove_roles(
-                    ROLE_ID,
+                    discord.Object(ROLE_ID),
                     reason=f"Automatically done for user leaving voice channel {before.channel}",
                 )
             except discord.Forbidden:
