@@ -39,5 +39,5 @@ class VoiceRolePlugin(commands.Cog):
                 )
             except discord.Forbidden:
                 return
-    def setup(bot):
-        bot.add_cog(VoiceRolePlugin(bot))
+def setup(bot):
+    bot.add_cog(VoiceRolePlugin(bot))
