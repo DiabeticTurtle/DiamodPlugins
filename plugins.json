@@ -1,15 +1,26 @@
 {
-   "allowed":[
-      "tags",
-      "announcement",
-      "dmonjoin",
-      "hastebin",
-      "leaveserver",
-      "translator",
-      "reacttocontact",
-      "moderation",
-      "backupdb",
-      "fix",
-      "giveaway"
-   ]
+    "allowed": [
+        "tags",
+        "audit",
+        "backupdb",
+        "button",
+        "dashboard",
+        "embedmanager",
+        "invites",
+        "logger",
+        "moderation",
+        "poll",
+        "rolemanager",
+        "Sender",
+        "staff-stats",
+        "starboard",
+        "stats",
+        "tags",
+        "tempmute",
+        "translator",
+        "trivia",
+        "voice",
+        "warn",
+        "welcomer"
+    ]
 }
