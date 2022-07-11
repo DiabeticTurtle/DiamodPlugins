@@ -73,12 +73,10 @@ NO_EMOJI = "❌"
 class EmbedManager(commands.Cog, name="Embed Manager"):
     """
     Create, post, and store embeds.
-
     __**About:**__
     This plugin is a modified version of `embedutils` cog made by [PhenoM4n4n](https://github.com/phenom4n4n).
     Original repository can be found [here](https://github.com/phenom4n4n/phen-cogs/tree/master/embedutils).
     Any credits must go to original developer of this cog.
-
     __**Note:**__
     The JSON must be in the format expected by this [Discord documentation](https://discord.com/developers/docs/resources/channel#embed-object).
     """
@@ -146,7 +144,6 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     async def _embed(self, ctx: commands.Context):
         """
         Base command for Embed Manager.
-
         __**Note:**__
         The JSON must be in the format expected by this [Discord documentation](https://discord.com/developers/docs/resources/channel#embed-object).
         - Use command `{prefix}embed example` to see a JSON example.
@@ -176,7 +173,6 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Post a simple embed.
-
         Put the title in quotes if it is multiple words.
         """
         channel = channel or ctx.channel
@@ -210,9 +206,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     async def embed_message(self, ctx: commands.Context, message: discord.Message, index: int = 0):
         """
         Post an embed from a message.
-
         `message` may be a message ID or message link of the embed.
-
         __**Note:**__
         If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
@@ -224,9 +218,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     async def embed_download(self, ctx: commands.Context, message: discord.Message, index: int = 0):
         """
         Download a JSON file from a message's embed.
-
         `message` may be a message ID or message link of the embed.
-
         __**Note:**__
         If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
@@ -243,10 +235,8 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Post a stored embed.
-
         `name` must be a name that was used when storing the embed.
         `channel` may be a channel name, ID, or mention.
-
         Use command `{prefix}embed store list` to get the list of stored embeds.
         """
         channel = channel or ctx.channel
@@ -257,9 +247,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     async def embed_info(self, ctx: commands.Context, name: StoredEmbedConverter):
         """
         Get info about an embed that is stored.
-
         `name` must be a name that was used when storing the embed.
-
         Use command `{prefix}embed store list` to get the list of stored embeds.
         """
         embed = discord.Embed(
@@ -284,7 +272,6 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Edit a message sent by Bot's embeds.
-
         `message` may be a message ID or message link of the bot's embed.
         """
         color = color or self.bot.main_color
@@ -299,7 +286,6 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Edit a message's embed using valid JSON.
-
         `message` may be a message ID or message link of the bot's embed.
         """
         await message.edit(embed=data)
@@ -310,7 +296,6 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     async def embed_edit_fromfile(self, ctx: commands.Context, message: BotMessage):
         """
         Edit a message's embed using a valid JSON file.
-
         `message` may be a message ID or message link of the bot's embed.
         """
         data = await self.get_file_from_message(ctx, file_types=("json", "txt"))
@@ -329,10 +314,8 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Edit a message's embed using another message's embed.
-
         `source` may be a message ID or message link of the source embed.
         `target` may be a message ID or message link of the bot's embed you want to edit.
-
         __**Note:**__
         If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
@@ -361,7 +344,6 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Store a simple embed.
-
         Put the title in quotes if it has multiple words.
         """
         if not color:
@@ -396,9 +378,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     async def embed_store_message(self, ctx: commands.Context, name: str, message: discord.Message, index: int = 0):
         """
         Store an embed from a message.
-
         `message` may be a message ID or message link of the embed you want to store.
-
         __**Note:**__
         If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
