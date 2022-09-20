@@ -6,7 +6,7 @@ Also check out plugin wiki [here](https://github.com/kyb3r/modmail/wiki/Plugins)
 
 ## How to install
 
-Type `?plugin add DiabeticTurtle/DiamodPlugins/tags@main` to add the tags plugin.
+ `?plugin add DiabeticTurtle/DiamodPlugins/<plugin>@main` 
 
 
 ## List of plugins
