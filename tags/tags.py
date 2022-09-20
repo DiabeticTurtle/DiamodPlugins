@@ -106,7 +106,7 @@ class TagsPlugin(commands.Cog):
         """
         tag = await self.find_db(name=name)
         if tag is None:
-            await ctx.send(":x: | Tag `{name}` not found in the database.")
+            await ctx.send(f":x: | Tag `{name}` not found in the database.")
         else:
             if (
                 ctx.author.id == tag["author"]
@@ -128,7 +128,7 @@ class TagsPlugin(commands.Cog):
         tag = await self.find_db(name=name)
 
         if tag is None:
-            await ctx.send(":x: | Tag `{name}` not found.")
+            await ctx.send(f":x: | Tag `{name}` not found.")
         else:
             member = await ctx.guild.get_member(tag["author"])
             if member is not None:
@@ -154,7 +154,7 @@ class TagsPlugin(commands.Cog):
         tag = await self.find_db(name=name)
 
         if tag is None:
-            await ctx.send(":x: | Tag `{name}` not found.")
+            await ctx.send(f":x: | Tag `{name}` not found.")
         else:
             user: discord.User = await self.bot.fetch_user(tag["author"])
             embed = discord.Embed()
