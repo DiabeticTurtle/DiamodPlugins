@@ -1,26 +1,65 @@
+from __future__ import annotations
+
 import io
 import json
-from typing import Dict, Optional
+from pathlib import Path
+from typing import Dict, Optional, TYPE_CHECKING
 
 import discord
 from discord.ext import commands
+from discord.utils import MISSING
 
 from core import checks
-from core.paginator import EmbedPaginatorSession
 from core.models import PermissionLevel
+from core.paginator import EmbedPaginatorSession
+from core.utils import human_join
 
-from .converters import (
+from .core.builder import EmbedBuilderView
+from .core.converters import (
     MessageableChannel,
     BotMessage,
     StoredEmbedConverter,
     StringToEmbed,
 )
-from .utils import inline, human_join, paginate
+
+
+if TYPE_CHECKING:
+    from .motor.motor_asyncio import AsyncIOMotorCollection
+    from bot import ModmailBot
+
+info_json = Path(__file__).parent.resolve() / "info.json"
+with open(info_json, encoding="utf-8") as f:
+    __plugin_info__ = json.loads(f.read())
+
+__plugin_name__ = __plugin_info__["name"]
+__version__ = __plugin_info__["version"]
+__description__ = "\n".join(__plugin_info__["description"]).format(__version__)
+
+# <!-- Developer -->
+if TYPE_CHECKING:
+    from ..utils.utils import inline, paginate
+else:
+    inline = MISSING
+    paginate = MISSING
+
+
+def _set_globals(cog: EmbedManager) -> None:
+    required = __plugin_info__["cogs_required"][0]
+    utils_cog = cog.bot.get_cog(required)
+    if not utils_cog:
+        raise RuntimeError(f"{required} plugin is required for {cog.qualified_name} plugin to function.")
+
+    global inline, paginate
+
+    inline = utils_cog.chat_formatting["inline"]
+    paginate = utils_cog.chat_formatting["paginate"]
+
+
+# <!-- ----- -->
+
 
 JSON_CONVERTER = StringToEmbed()
 JSON_CONTENT_CONVERTER = StringToEmbed(content=True)
-
-
 JSON_EXAMPLE = """
 {
     "title": "JSON Example",
@@ -66,33 +105,36 @@ JSON_EXAMPLE = """
 """
 
 
-YES_EMOJI = "✅"
-NO_EMOJI = "❌"
+YES_EMOJI = "\N{WHITE HEAVY CHECK MARK}"
+NO_EMOJI = "\N{CROSS MARK}"
 
 
-class EmbedManager(commands.Cog, name="Embed Manager"):
-    """
-    Create, post, and store embeds.
-    __**About:**__
-    This plugin is a modified version of `embedutils` cog made by [PhenoM4n4n](https://github.com/phenom4n4n).
-    Original repository can be found [here](https://github.com/phenom4n4n/phen-cogs/tree/master/embedutils).
-    Any credits must go to original developer of this cog.
-    __**Note:**__
-    The JSON must be in the format expected by this [Discord documentation](https://discord.com/developers/docs/resources/channel#embed-object).
-    """
+class EmbedManager(commands.Cog, name=__plugin_name__):
+    __doc__ = __description__
 
     _id = "config"
     default_config = {"embeds": {}}
 
-    def __init__(self, bot):
+    def __init__(self, bot: ModmailBot):
         """
         Parameters
         ----------
-        bot : bot.ModmailBot
+        bot : ModmailBot
             The Modmail bot.
         """
-        self.bot = bot
-        self.db = bot.api.get_plugin_partition(self)
+        self.bot: ModmailBot = bot
+        self.db: AsyncIOMotorCollection = bot.api.get_plugin_partition(self)
+
+    async def cog_load(self) -> None:
+        """
+        Initial tasks when loading the cog.
+        """
+        self.bot.loop.create_task(self.initialize())
+
+    async def initialize(self) -> None:
+        # Ensure everything is ready and all extensions are loaded
+        await self.bot.wait_for_connected()
+        _set_globals(self)
 
     async def db_config(self) -> Dict:
         # No need to store in cache when initializing the plugin.
@@ -141,16 +183,17 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
 
     @commands.group(name="embed", usage="<option>", invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def _embed(self, ctx: commands.Context):
+    async def embed_group(self, ctx: commands.Context):
         """
         Base command for Embed Manager.
+
         __**Note:**__
         The JSON must be in the format expected by this [Discord documentation](https://discord.com/developers/docs/resources/channel#embed-object).
         - Use command `{prefix}embed example` to see a JSON example.
         """
         await ctx.send_help(ctx.command)
 
-    @_embed.command(name="example")
+    @embed_group.command(name="example")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_example(self, ctx: commands.Context):
         """
@@ -160,7 +203,27 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
         embed.description = f"```py\n{JSON_EXAMPLE}\n```"
         await ctx.send(embed=embed)
 
-    @_embed.command(name="simple")
+    @embed_group.command(name="build")
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    async def embed_build(self, ctx: commands.Context):
+        """
+        Build embeds in an interactive mode using buttons and modal view.
+        """
+        description = "Select the category and press the button below respectively to start creating/editing your embed."
+        embed = discord.Embed(
+            title="Embed Builder Panel",
+            description=description,
+            color=self.bot.main_color,
+            timestamp=discord.utils.utcnow(),
+        )
+        embed.set_footer(text="This panel will time out after 10 minutes.")
+        view = EmbedBuilderView(ctx.author)
+        view.message = await ctx.send(embed=embed, view=view)
+        await view.wait()
+        if view.embed:
+            await ctx.send(embed=view.embed)
+
+    @embed_group.command(name="simple")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_simple(
         self,
@@ -173,6 +236,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Post a simple embed.
+
         Put the title in quotes if it is multiple words.
         """
         channel = channel or ctx.channel
@@ -180,7 +244,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
         embed = discord.Embed(color=color, title=title, description=description)
         await channel.send(embed=embed)
 
-    @_embed.command(name="json", aliases=["fromjson", "fromdata"])
+    @embed_group.command(name="json", aliases=["fromjson", "fromdata"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_json(self, ctx: commands.Context, *, data: JSON_CONTENT_CONVERTER):
         """
@@ -190,7 +254,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
         await ctx.send(embed=embed)
         await ctx.message.add_reaction(YES_EMOJI)
 
-    @_embed.command(name="fromfile", aliases=["fromjsonfile", "fromdatafile"])
+    @embed_group.command(name="fromfile", aliases=["fromjsonfile", "fromdatafile"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_fromfile(self, ctx: commands.Context):
         """
@@ -201,24 +265,28 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
         await ctx.send(embed=embed)
         await ctx.message.add_reaction(YES_EMOJI)
 
-    @_embed.command(name="message", aliases=["frommsg", "frommessage"])
+    @embed_group.command(name="message", aliases=["frommsg", "frommessage"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_message(self, ctx: commands.Context, message: discord.Message, index: int = 0):
         """
         Post an embed from a message.
-        `message` may be a message ID or message link of the embed.
+
+        `message` may be a message ID, message link, or format of `channelid-messageid` of the embed.
+
         __**Note:**__
         If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
         embed = await self.get_embed_from_message(message, index)
         await ctx.send(embed=embed)
 
-    @_embed.command(name="download")
+    @embed_group.command(name="download")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_download(self, ctx: commands.Context, message: discord.Message, index: int = 0):
         """
         Download a JSON file from a message's embed.
-        `message` may be a message ID or message link of the embed.
+
+        `message` may be a message ID, message link, or format of `channelid-messageid` of the embed.
+
         __**Note:**__
         If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
@@ -228,65 +296,80 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
         fp = io.BytesIO(bytes(data, "utf-8"))
         await ctx.send(file=discord.File(fp, "embed.json"))
 
-    @_embed.command(name="post", aliases=["view", "drop", "show"], invoke_without_command=True)
+    @embed_group.command(name="post", aliases=["view", "drop", "show"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_post(
-        self, ctx: commands.Context, name: StoredEmbedConverter, channel: MessageableChannel = None
+        self,
+        ctx: commands.Context,
+        name: StoredEmbedConverter,
+        channel: MessageableChannel = None,
     ):
         """
         Post a stored embed.
+
         `name` must be a name that was used when storing the embed.
         `channel` may be a channel name, ID, or mention.
+
         Use command `{prefix}embed store list` to get the list of stored embeds.
         """
         channel = channel or ctx.channel
         await channel.send(embed=discord.Embed.from_dict(name["embed"]))
 
-    @_embed.command(name="info")
+    @embed_group.command(name="info")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_info(self, ctx: commands.Context, name: StoredEmbedConverter):
         """
         Get info about an embed that is stored.
+
         `name` must be a name that was used when storing the embed.
+
         Use command `{prefix}embed store list` to get the list of stored embeds.
         """
         embed = discord.Embed(
             title=f"`{name['name']}` Info",
             description=(
-                f"Author: <@!{name['author']}>\n"
-                f"Length: {len(discord.Embed.from_dict(name['embed']))}"
+                f"Author: <@!{name['author']}>\n" f"Length: {len(discord.Embed.from_dict(name['embed']))}"
             ),
         )
         await ctx.send(embed=embed)
 
-    @_embed.group(name="edit", usage="<option>", invoke_without_command=True)
+    @embed_group.group(name="edit", invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def embed_edit(
-        self,
-        ctx: commands.Context,
-        message: BotMessage,
-        color: Optional[discord.Color],
-        title: str,
-        *,
-        description: str,
-    ):
+    async def embed_edit(self, ctx: commands.Context, message: BotMessage, index: int = 0):
         """
-        Edit a message sent by Bot's embeds.
-        `message` may be a message ID or message link of the bot's embed.
+        Edit a message's embed sent by the bot.
+        This will initiate the Embed Editor panel with interactive buttons and text inputs session.
+        The values for the input fields are pre-defined based on the source embed.
+
+        `message` may be a message ID, message link, or format of `channelid-messageid` of the bot's embed.
+
+        __**Note:**__
+        If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
-        color = color or self.bot.main_color
-        embed = discord.Embed(color=color, title=title, description=description)
-        await message.edit(embed=embed)
-        await ctx.message.add_reaction(YES_EMOJI)
+        source_embed = await self.get_embed_from_message(message, index)
+        view = EmbedBuilderView.from_embed(ctx.author, embed=source_embed)
+        description = "Select the category and press the button below respectively to start creating/editing your embed."
+        embed = discord.Embed(
+            title="Embed Editor",
+            description=description,
+            color=self.bot.main_color,
+            timestamp=discord.utils.utcnow(),
+        )
+        embed.set_footer(text="This panel will time out after 10 minutes.")
+        view.message = await ctx.send(embed=embed, view=view)
+        await view.wait()
+
+        if view.embed:
+            await message.edit(embed=view.embed)
+            await ctx.message.add_reaction(YES_EMOJI)
 
     @embed_edit.command(name="json", aliases=["fromjson", "fromdata"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def embed_edit_json(
-        self, ctx: commands.Context, message: BotMessage, *, data: JSON_CONVERTER
-    ):
+    async def embed_edit_json(self, ctx: commands.Context, message: BotMessage, *, data: JSON_CONVERTER):
         """
         Edit a message's embed using valid JSON.
-        `message` may be a message ID or message link of the bot's embed.
+
+        `message` may be a message ID, message link, or format of `channelid-messageid` of the bot's embed.
         """
         await message.edit(embed=data)
         await ctx.message.add_reaction(YES_EMOJI)
@@ -296,7 +379,8 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     async def embed_edit_fromfile(self, ctx: commands.Context, message: BotMessage):
         """
         Edit a message's embed using a valid JSON file.
-        `message` may be a message ID or message link of the bot's embed.
+
+        `message` may be a message ID, message link, or format of `channelid-messageid` of the bot's embed.
         """
         data = await self.get_file_from_message(ctx, file_types=("json", "txt"))
         embed = await JSON_CONVERTER.convert(ctx, data)
@@ -314,8 +398,10 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Edit a message's embed using another message's embed.
-        `source` may be a message ID or message link of the source embed.
-        `target` may be a message ID or message link of the bot's embed you want to edit.
+
+        `source` may be a message ID, message link, or format of `channelid-messageid` of the source embed.
+        `target` may be a message ID, message link, or format of `channelid-messageid` of the bot's embed you want to edit.
+
         __**Note:**__
         If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
@@ -323,7 +409,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
         await target.edit(embed=embed)
         await ctx.message.add_reaction(YES_EMOJI)
 
-    @_embed.group(name="store", usage="<option>", invoke_without_command=True)
+    @embed_group.group(name="store", usage="<option>", invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def embed_store(self, ctx: commands.Context):
         """
@@ -344,6 +430,7 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
     ):
         """
         Store a simple embed.
+
         Put the title in quotes if it has multiple words.
         """
         if not color:
@@ -375,10 +462,14 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
 
     @embed_store.command(name="message", aliases=["frommsg", "frommessage"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def embed_store_message(self, ctx: commands.Context, name: str, message: discord.Message, index: int = 0):
+    async def embed_store_message(
+        self, ctx: commands.Context, name: str, message: discord.Message, index: int = 0
+    ):
         """
         Store an embed from a message.
-        `message` may be a message ID or message link of the embed you want to store.
+
+        `message` may be a message ID, message link, or format of `channelid-messageid` of the embed you want to store.
+
         __**Note:**__
         If the message has multiple embeds, you can pass a number to `index` to specify which embed.
         """
@@ -466,5 +557,5 @@ class EmbedManager(commands.Cog, name="Embed Manager"):
         return embed, data["author"], data["uses"]
 
 
-def setup(bot):
-    bot.add_cog(EmbedManager(bot))
+async def setup(bot: ModmailBot) -> None:
+    await bot.add_cog(EmbedManager(bot))
