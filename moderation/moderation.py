@@ -1525,5 +1525,5 @@ class Moderation(commands.Cog):
         )
 
 
-async def setup(bot: ModmailBot) -> None:
+async def setup(bot: ModmailBot)
     await bot.add_cog(Moderation(bot))
