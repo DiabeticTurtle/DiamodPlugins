@@ -4,7 +4,7 @@ from typing import Any, Dict, Union
 import discord
 from datetime import datetime
 from discord.ext import commands
-
+from box import Box
 from core import checks
 from core.models import PermissionLevel
 from .models import apply_vars, SafeString
@@ -106,7 +106,7 @@ class TagsPlugin(commands.Cog):
         """
         tag = await self.find_db(name=name)
         if tag is None:
-            await ctx.send(":x: | Tag `{name}` not found in the database.")
+            await ctx.send(f":x: | Tag `{name}` not found in the database.")
         else:
             if (
                 ctx.author.id == tag["author"]
@@ -128,7 +128,7 @@ class TagsPlugin(commands.Cog):
         tag = await self.find_db(name=name)
 
         if tag is None:
-            await ctx.send(":x: | Tag `{name}` not found.")
+            await ctx.send(f":x: | Tag `{name}` not found.")
         else:
             member = await ctx.guild.get_member(tag["author"])
             if member is not None:
@@ -154,7 +154,7 @@ class TagsPlugin(commands.Cog):
         tag = await self.find_db(name=name)
 
         if tag is None:
-            await ctx.send(":x: | Tag `{name}` not found.")
+            await ctx.send(f":x: | Tag `{name}` not found.")
         else:
             user: discord.User = await self.bot.fetch_user(tag["author"])
             embed = discord.Embed()
@@ -190,7 +190,7 @@ class TagsPlugin(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.author.bot and msg.content.startswith("Please set your Nightscout"):
+        if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
             await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
             return
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
@@ -236,5 +236,5 @@ class TagsPlugin(commands.Cog):
     #    return updated_tag
 
 
-def setup(bot):
-    bot.add_cog(TagsPlugin(bot))
+async def setup(bot):
+    await bot.add_cog(TagsPlugin(bot))
