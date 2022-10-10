@@ -4,7 +4,7 @@ from typing import Any, Dict, Union
 import discord
 from datetime import datetime
 from discord.ext import commands
-
+from box import Box
 from core import checks
 from core.models import PermissionLevel
 from .models import apply_vars, SafeString
@@ -190,7 +190,7 @@ class TagsPlugin(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.author.bot and msg.content.startswith("Please set your Nightscout"):
+        if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
             await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
             return
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
