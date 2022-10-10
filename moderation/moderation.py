@@ -864,7 +864,7 @@ class Moderation(commands.Cog):
         try:
             await ctx.guild.ban(
                 user,
-                reason=f"Moderator - {ctx.author}.\nReason - {reason}\n If you have any questions please join this server: https://discord.gg/3Dfh45GTWq and ask here.",
+                reason=f"Moderator - {ctx.author}.\nReason - {reason}",
                 delete_message_days=message_days,
             )
         except discord.Forbidden:
