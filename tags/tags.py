@@ -52,13 +52,13 @@ class TagsPlugin(commands.Cog):
         
     @tags.command(name='list')
     async def list_(self, ctx):
-        '''Get a list of tags that hace already been made.'''
+        """Get a list of tags that have already been made."""
 
-        tags = await self.db.find({}).to_list(length=None)
+            tags = await self.db.find({}).to_list(length=None)
 
-        if tags is None:
-            return await ctx.send(':x: | You don\'t have any tags.')
-        
+            if tags is None:
+                return await ctx.send(':x: | You don\'t have any tags.')
+
         list_tags = []
 
         for tag in tags:
@@ -69,7 +69,11 @@ class TagsPlugin(commands.Cog):
 
         send_tags = 'Tags: ' + ', '.join(list_tags)
 
-        await ctx.send(send_tags)   
+        # Create the embed object
+        embed = discord.Embed(title="Tag List", description=send_tags, color=0x00ff00)
+
+        # Send the embed object
+        await ctx.send(embed=embed)   
 
 
 
