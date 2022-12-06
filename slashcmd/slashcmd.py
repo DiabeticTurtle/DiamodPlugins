@@ -1,6 +1,6 @@
 from discord.ext import commands
 
-class Hello(commands.Cog):
+class slashcmd(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
