@@ -1,5 +1,6 @@
 from discord.ext import commands
 import asyncio
+import random
 
 class ArtPrompts(commands.Cog):
     def __init__(self, bot):
