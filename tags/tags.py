@@ -69,7 +69,12 @@ class TagsPlugin(commands.Cog):
 
         send_tags = 'Tags: ' + ', '.join(list_tags)
 
-        await ctx.send(send_tags)   
+        # Create the embed object
+        embed = discord.Embed(title="Tag List", description=send_tags, color=None)
+
+        # Send the embed object
+        await ctx.send(embed=embed)
+   
 
 
 
