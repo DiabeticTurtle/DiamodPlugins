@@ -25,7 +25,7 @@ class TagsPlugin(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, *, content: str):
+    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Make a new tag
         """
@@ -37,6 +37,7 @@ class TagsPlugin(commands.Cog):
             await self.db.insert_one(
                 {
                     "name": name,
+                    "category": category,
                     "content": ctx.message.clean_content,
                     "createdAt": datetime.utcnow(),
                     "updatedAt": datetime.utcnow(),
@@ -79,7 +80,7 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def edit(self, ctx: commands.Context, name: str, *, content: str):
+    async def edit(self, ctx: commands.Context, name: str, *, content: str, category: str):
         """
         Edit an existing tag
         Only owner of tag or user with Manage Server permissions can use this command
@@ -94,7 +95,7 @@ class TagsPlugin(commands.Cog):
             if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
                 await self.db.find_one_and_update(
                     {"name": name},
-                    {"$set": {"content": content, "updatedAt": datetime.utcnow()}},
+                    {"$set": {"content": content, "category": category, "updatedAt": datetime.utcnow()}},
                 )
 
                 await ctx.send(
@@ -168,6 +169,7 @@ class TagsPlugin(commands.Cog):
             embed.add_field(
                 name="Created By", value=f"{user.name}#{user.discriminator}"
             )
+            embed.add_field(name="Category", value=tag["category"])
             embed.add_field(name="Created At", value=tag["createdAt"])
             embed.add_field(
                 name="Last Modified At", value=tag["updatedAt"], inline=False
@@ -221,25 +223,6 @@ class TagsPlugin(commands.Cog):
 
     async def find_db(self, name: str):
         return await self.db.find_one({"name": name})
-
-    #def format_message(self, tag: str, message: discord.Message) -> Dict[str, Union[Any]]:
-    #    updated_tag: Dict[str, Union[Any]]
-    #    try:
-    #        updated_tag = json.loads(tag)
-    #    except json.JSONDecodeError:
-    #        # message is not embed
-    #        tag = apply_vars(self.bot, tag, message)
-    #        updated_tag = {'content': tag}
-    #    else:
-    #        # message is embed
-    #        updated_tag = self.apply_vars_dict(updated_tag, message)
-
-    #        if 'embed' in updated_tag:
-    #            updated_tag['embed'] = discord.Embed.from_dict(updated_tag['embed'])
-    #        else:
-    #            updated_tag = None
-    #    return updated_tag
-
 
 async def setup(bot):
     await bot.add_cog(TagsPlugin(bot))
