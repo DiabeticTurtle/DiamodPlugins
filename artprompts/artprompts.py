@@ -32,7 +32,7 @@ class ArtPrompts(commands.Cog):
 
     async def send_prompt(self):
         # Get the ID of the channel where the art prompts should be sent
-        channel_id = 123456
+        channel_id = 590818115756097537
 
         # Get a reference to the channel
         channel = self.bot.get_channel(channel_id)
