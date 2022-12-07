@@ -52,17 +52,23 @@ class TagsPlugin(commands.Cog):
             return
         
     @tags.command(name='list')
-    async def list_(self, ctx: commands.Context, category: str):
+    async def list(self, ctx: commands.Context, category: str):
         """
-        List all the tags in a given category
+        List all the tags in the database, optionally filtered by category
         """
         tags = await self.find_db(category=category)
         if tags is None:
-            await ctx.send(f":x: | No tags found in category `{category}`!")
+            await ctx.send(f":x: | No tags found in the database" + (f" with category `{category}`" if category else ""))
             return
 
-        tag_names = [tag["name"] for tag in tags]
-        await ctx.send(f"Tags in category `{category}`: {', '.join(tag_names)}")
+        # Create an embed to display the tags
+        embed = discord.Embed(title="Tags in the database" + (f" with category `{category}`" if category else ""))
+
+        # Add a field for each tag, showing the tag name and its category
+        for tag in tags:
+            embed.add_field(name=tag["name"], value=tag["category"], inline=False)
+
+        await ctx.send(embed=embed)
    
 
 
