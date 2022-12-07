@@ -1,4 +1,5 @@
 from discord.ext import commands
+from discord import TextChannel
 from datetime import datetime, timedelta
 
 class ArtPrompts(commands.Cog):
