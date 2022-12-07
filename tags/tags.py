@@ -58,7 +58,7 @@ class TagsPlugin(commands.Cog):
         """
         tags = await self.find_db(category=category)
         if tags is None:
-            await ctx.send(f":x: | No tags found in the database" + (f" with category `{category}`" if category else ""))
+            await ctx.send(":x: | No tags found in the database" + (f" with category `{category}`" if category else ""))
             return
 
         # Create an embed to display the tags
