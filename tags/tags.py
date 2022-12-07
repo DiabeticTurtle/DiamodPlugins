@@ -38,6 +38,7 @@ class TagsPlugin(commands.Cog):
             await self.db.insert_one(
                 {
                     "name": name,
+                    "category": category,
                     "content": ctx.message.clean_content,
                     "createdAt": datetime.utcnow(),
                     "updatedAt": datetime.utcnow(),
@@ -79,7 +80,7 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def edit(self, ctx: commands.Context, name: str, *, content: str):
+    async def edit(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Edit an existing tag
         Only owner of tag or user with Manage Server permissions can use this command
@@ -87,14 +88,14 @@ class TagsPlugin(commands.Cog):
         tag = await self.find_db(name=name)
 
         if tag is None:
-            await ctx.send(f":x: | Tag with name `{name}` does'nt exist")
+            await ctx.send(f":x: | Tag with name `{name}` does not exist")
             return
         else:
             member: discord.Member = ctx.author
             if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
                 await self.db.find_one_and_update(
                     {"name": name},
-                    {"$set": {"content": content, "updatedAt": datetime.utcnow()}},
+                    {"$set": {"category": category, "content": content, "updatedAt": datetime.utcnow()}},
                 )
 
                 await ctx.send(
