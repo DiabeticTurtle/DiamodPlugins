@@ -1,60 +1,41 @@
 from discord.ext import commands
-import asyncio
-import random
+from datetime import datetime, timedelta
 
 class ArtPrompts(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.prompts = ["Draw a portrait of your favorite character", "Paint a landscape of your favorite place", "Create a collage of your favorite memories"]
+        self.prompt_channel_id = None
 
-        # Create a background task that runs the send_prompt function every day
-        self.bg_task = self.bot.loop.create_task(self.send_prompt())
+    def get_next_prompt(self):
+        # get the current date and time
+        current_time = datetime.now()
+
+        # get the time for the next prompt (every 24 hours)
+        next_prompt_time = current_time + timedelta(hours=24)
+
+        # get the index of the next prompt
+        next_prompt_index = next_prompt_time.day % len(self.prompts)
+
+        # get the next prompt
+        next_prompt = self.prompts[next_prompt_index]
+
+        return next_prompt
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        print(message.content)
+        # check if the message is in the prompt channel
+        if message.channel.id == self.prompt_channel_id:
+            # get the next prompt
+            next_prompt = self.get_next_prompt()
+
+            # send the next prompt to the channel
+            await message.channel.send(next_prompt)
 
     @commands.command()
-    async def diabetesart(self, ctx):
-        # Generate a random diabetes-related art prompt
-        prompts = [
-            "Create a portrait of someone living with diabetes",
-            "Illustrate a scene from a day in the life of a person with diabetes",
-            "Design a poster promoting diabetes awareness and education",
-            "Draw a picture of a diabetes-friendly meal",
-            "Paint a landscape that represents the emotional journey of living with diabetes"
-        ]
-
-        # Select a random art prompt from the list
-        prompt = prompts[random.randint(0, len(prompts) - 1)]
-
-        # Send the selected art prompt to the user
-        await ctx.send(prompt)
-
-    async def send_prompt(self):
-        # Get the ID of the channel where the art prompts should be sent
-        channel_id = 590818115756097537
-
-        # Get a reference to the channel
-        channel = self.bot.get_channel(channel_id)
-
-        while True:
-            # Generate a random diabetes-related art prompt
-            prompts = [
-                "Create a portrait of someone living with diabetes",
-                "Illustrate a scene from a day in the life of a person with diabetes",
-                "Design a poster promoting diabetes awareness and education",
-                "Draw a picture of a diabetes-friendly meal",
-                "Paint a landscape that represents the emotional journey of living with diabetes"
-            ]
-
-            # Select a random art prompt from the list
-            prompt = prompts[random.randint(0, len(prompts) - 1)]
-
-            # Send the selected art prompt to the channel
-            await channel.send(prompt)
-
-            # Wait for 24 hours before sending the next art prompt
-            await asyncio.sleep(24 * 60 * 60)
+    async def set_prompt_channel(self, ctx, channel: discord.TextChannel):
+        self.prompt_channel_id = channel.id
+        await ctx.send(f"Art prompt channel set to {channel.mention}")
 
 async def setup(bot):
     await bot.add_cog(ArtPrompts(bot))
