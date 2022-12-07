@@ -8,6 +8,7 @@ from box import Box
 from core import checks
 from core.models import PermissionLevel
 from .models import apply_vars, SafeString
+import itertools
 
 
 class TagsPlugin(commands.Cog):
@@ -25,7 +26,7 @@ class TagsPlugin(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
+    async def add(self, ctx: commands.Context, name: str, *, content: str):
         """
         Make a new tag
         """
@@ -37,7 +38,6 @@ class TagsPlugin(commands.Cog):
             await self.db.insert_one(
                 {
                     "name": name,
-                    "category": category,
                     "content": ctx.message.clean_content,
                     "createdAt": datetime.utcnow(),
                     "updatedAt": datetime.utcnow(),
@@ -52,29 +52,34 @@ class TagsPlugin(commands.Cog):
             return
         
     @tags.command(name='list')
-    async def list(self, ctx: commands.Context, category: str):
+    async def list_(self, ctx):
         """
-        List all the tags in the database, optionally filtered by category
+        Get a list of tags that have already been made, grouped by category
         """
-        tags = await self.find_db(category=category)
+        tags = await self.db.find({}).to_list(length=None)
+
         if tags is None:
-            await ctx.send(":x: | No tags found in the database" + (f" with category `{category}`" if category else ""))
-            return
+            return await ctx.send(':x: | You don\'t have any tags.')
 
-        # Create an embed to display the tags
-        embed = discord.Embed(title="Tags in the database" + (f" with category `{category}`" if category else ""))
+        # Group the tags by their category
+        tags_by_category = itertools.groupby(tags, key=lambda t: t["category"])
 
-        # Add a field for each tag, showing the tag name and its category
-        for tag in tags:
-            embed.add_field(name=tag["name"], value=tag["category"], inline=False)
+        # Create a formatted string showing each category and the tags in it
+        tag_list = "\n".join(
+            f"{category}:\n {', '.join(tag['name'] for tag in tags)}" for category, tags in tags_by_category
+        )
 
+        # Create the embed object
+        embed = discord.Embed(title="Tag List", description=tag_list, color=None)
+
+        # Send the embed object
         await ctx.send(embed=embed)
    
 
 
 
     @tags.command()
-    async def edit(self, ctx: commands.Context, name: str, *, content: str, category: str):
+    async def edit(self, ctx: commands.Context, name: str, *, content: str):
         """
         Edit an existing tag
         Only owner of tag or user with Manage Server permissions can use this command
@@ -89,7 +94,7 @@ class TagsPlugin(commands.Cog):
             if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
                 await self.db.find_one_and_update(
                     {"name": name},
-                    {"$set": {"category": category, "content": content, "updatedAt": datetime.utcnow()}},
+                    {"$set": {"content": content, "updatedAt": datetime.utcnow()}},
                 )
 
                 await ctx.send(
@@ -163,7 +168,6 @@ class TagsPlugin(commands.Cog):
             embed.add_field(
                 name="Created By", value=f"{user.name}#{user.discriminator}"
             )
-            embed.add_field(name="Category", value=tag["category"])
             embed.add_field(name="Created At", value=tag["createdAt"])
             embed.add_field(
                 name="Last Modified At", value=tag["updatedAt"], inline=False
@@ -217,6 +221,25 @@ class TagsPlugin(commands.Cog):
 
     async def find_db(self, name: str):
         return await self.db.find_one({"name": name})
+
+    #def format_message(self, tag: str, message: discord.Message) -> Dict[str, Union[Any]]:
+    #    updated_tag: Dict[str, Union[Any]]
+    #    try:
+    #        updated_tag = json.loads(tag)
+    #    except json.JSONDecodeError:
+    #        # message is not embed
+    #        tag = apply_vars(self.bot, tag, message)
+    #        updated_tag = {'content': tag}
+    #    else:
+    #        # message is embed
+    #        updated_tag = self.apply_vars_dict(updated_tag, message)
+
+    #        if 'embed' in updated_tag:
+    #            updated_tag['embed'] = discord.Embed.from_dict(updated_tag['embed'])
+    #        else:
+    #            updated_tag = None
+    #    return updated_tag
+
 
 async def setup(bot):
     await bot.add_cog(TagsPlugin(bot))
