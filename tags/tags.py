@@ -52,34 +52,17 @@ class TagsPlugin(commands.Cog):
             return
         
     @tags.command(name='list')
-    async def list_(self, ctx, category: str = None):
-        '''Get a list of tags that hace already been made.'''
-        if category is None:
-            tags = await self.db.find({}).to_list(length=None)
-        else:
-            Tags = await self.db.find({'category': category}).to_list(length=None)
-
+    async def list_(self, ctx: commands.Context, category: str):
+        """
+        List all the tags in a given category
+        """
+        tags = await self.find_db(category=category)
         if tags is None:
-            return await ctx.send(':x: | You don\'t have any tags.')
-        
-        list_tags = []
+            await ctx.send(f":x: | No tags found in category `{category}`!")
+            return
 
-        for tag in tags:
-            try:
-                list_tags.append(tag['name'])
-            except:
-                continue
-
-        send_tags = 'Tags: ' + ', '.join(list_tags)
-
-        # Create the embed object
-        embed = discord.Embed(title="Tag List", description=send_tags, color=None)
-
-        if category is None:
-            embed.add_field(name="category", value=category, inline=False)
-
-        # Send the embed object
-        await ctx.send(embed=embed)
+        tag_names = [tag["name"] for tag in tags]
+        await ctx.send(f"Tags in category `{category}`: {', '.join(tag_names)}")
    
 
 
