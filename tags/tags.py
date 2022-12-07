@@ -26,7 +26,7 @@ class TagsPlugin(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, *, content: str):
+    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Make a new tag
         """
@@ -194,34 +194,7 @@ class TagsPlugin(commands.Cog):
             )
             return
 
-    @commands.Cog.listener()
-    async def on_message(self, msg: discord.Message):
-        if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
-            await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
-            return
-        if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
-            return
-        
-        content = msg.content.replace(self.bot.prefix, "")
-        names = content.split(" ")
-
-        tag = await self.db.find_one({"name": names[0]})
-        thing = json.loads(tag["content"])
-        embed = discord.Embed.from_dict(thing['embed'])
-        if tag is None:
-            return
-        else:
-            
-            
-            
-            await msg.channel.send(embed=embed)
-            await self.db.find_one_and_update(
-                {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
-            )
-            return
-
-    async def find_db(self, name: str):
-        return await self.db.find_one({"name": name})
+    
 
     #def format_message(self, tag: str, message: discord.Message) -> Dict[str, Union[Any]]:
     #    updated_tag: Dict[str, Union[Any]]
