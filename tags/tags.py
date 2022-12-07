@@ -52,10 +52,12 @@ class TagsPlugin(commands.Cog):
             return
         
     @tags.command(name='list')
-    async def list_(self, ctx):
+    async def list_(self, ctx, category: str = None):
         '''Get a list of tags that hace already been made.'''
-
-        tags = await self.db.find({}).to_list(length=None)
+        if category is None:
+            tags = await self.db.find({}).to_list(length=None)
+        else:
+            Tags = await self.db.find({'category': category}).to_list(length=None)
 
         if tags is None:
             return await ctx.send(':x: | You don\'t have any tags.')
@@ -71,7 +73,10 @@ class TagsPlugin(commands.Cog):
         send_tags = 'Tags: ' + ', '.join(list_tags)
 
         # Create the embed object
-        embed = discord.Embed(title="Tag List", description=send_tags, color=0x00ff00)
+        embed = discord.Embed(title="Tag List", description=send_tags, color=None)
+
+        if category is None:
+            embed.add_field(name="category", value=category, inline=False)
 
         # Send the embed object
         await ctx.send(embed=embed)
@@ -95,7 +100,7 @@ class TagsPlugin(commands.Cog):
             if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
                 await self.db.find_one_and_update(
                     {"name": name},
-                    {"$set": {"content": content, "category": category, "updatedAt": datetime.utcnow()}},
+                    {"$set": {"category": category, "content": content, "updatedAt": datetime.utcnow()}},
                 )
 
                 await ctx.send(
