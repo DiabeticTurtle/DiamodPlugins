@@ -11,8 +11,8 @@ class ModContact(commands.Cog):
 
     @commands.command()
     async def join(self, ctx, thread_id: int):
-            if ctx.message.is_a_thread():
-                await ctx.message.channel.join_thread(thread_id)
+        if ctx.message.thread_id is not None:
+            await ctx.message.channel.join_thread(thread_id)
 
 async def setup(bot):
     await bot.add_cog(ModContact(bot))
