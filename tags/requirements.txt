@@ -1,3 +1,2 @@
-
 discord-paginator
 discord-ext-menus
