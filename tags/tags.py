@@ -86,28 +86,12 @@ class TagsPlugin(commands.Cog):
         if tags is None:
             return await ctx.send(':x: | You don\'t have any tags.')
 
-        list_tags = []
-
-        for tag in tags:
-            try:
-                list_tags.append(tag['name'])
-            except:
-                continue
-
-        # Create the dropdown options
-        options = [discord.SelectOption(label=tag, value=tag) for tag in list_tags]
-
-        # Create the dropdown object
-        select = discord.ui.Select(
-            placeholder='Select a tag category...',
-            options=options
-        )
-
-        # Send the dropdown menu
-        await ctx.send('Select a tag category:', view=select)
+        # Create and send the dropdown menu
+        view = TagSelectMenu([tag['name'] for tag in tags])
+        await ctx.send('Select a tag category:', view=view)
 
         # Wait for the user to make a selection
-        interaction = await self.bot.wait_for('select_option', check=lambda i: i.user == ctx.author and i.component == select)
+        interaction = await self.bot.wait_for('select_option', check=lambda i: i.user == ctx.author and i.component == view.children[0])
 
         selected_tag = interaction.values[0]
         await ctx.send(f'You selected the tag category: {selected_tag}')
