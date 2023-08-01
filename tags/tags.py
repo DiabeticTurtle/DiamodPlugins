@@ -35,6 +35,12 @@ class TagsPlugin(commands.Cog):
             options=[discord.SelectOption(label=tag, value=tag) for tag in tags]
         ))
         return view
+class TagListPageSource(menus.ListPageSource):
+    def format_page(self, menu: menus.MenuPages, entries):
+        offset = menu.current_page * self.per_page
+        joined_entries = "\n".join(f"• {name}" for name in entries[offset : offset + self.per_page])
+        embed = discord.Embed(title="Tag List", description=joined_entries)
+        return embed
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
