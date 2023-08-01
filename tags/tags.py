@@ -4,7 +4,7 @@ from typing import Any, Dict, Union
 import discord
 from datetime import datetime
 from discord.ext import commands
-from discord.ext.menus import MenuPages, ListPageSource
+from discord.ext.menus import ListPageSource, MenuPages
 from box import Box
 from core import checks
 from core.models import PermissionLevel
