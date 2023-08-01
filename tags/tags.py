@@ -8,6 +8,14 @@ from typing import Any, Dict, Union
 from box import Box
 from .models import apply_vars, SafeString
 
+class TagSelectMenu(discord.ui.View):
+    def __init__(self, tags):
+        super().__init__()
+        self.add_item(discord.ui.Select(
+            placeholder='Select a tag category...',
+            options=[discord.SelectOption(label=tag, value=tag) for tag in tags]
+        ))
+
 class TagsPlugin(commands.Cog):
     def __init__(self, bot):
         self.bot: discord.Client = bot
@@ -23,7 +31,7 @@ class TagsPlugin(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, *, content: str):
+    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Make a new tag
         """
@@ -36,17 +44,21 @@ class TagsPlugin(commands.Cog):
                 {
                     "name": name,
                     "content": ctx.message.clean_content,
+                    "category": category,
                     "createdAt": datetime.utcnow(),
                     "updatedAt": datetime.utcnow(),
                     "author": ctx.author.id,
                     "uses": 0,
                 }
             )
+            self.categories.add(category)  # Add the new category to the set of categories
 
-            await ctx.send(
-                f":white_check_mark: | Tag with name `{name}` has been successfully created!"
-            )
-            return
+        await ctx.send(
+            f":white_check_mark: | Tag with name `{name}` and category `{category}` has been successfully created!"
+        )
+        return
+
+    
 
     @tags.command(name='list')
     async def list_(self, ctx):
