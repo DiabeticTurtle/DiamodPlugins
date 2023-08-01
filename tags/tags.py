@@ -83,7 +83,7 @@ class TagsPlugin(commands.Cog):
         '''Get a list of tags that have already been made.'''
         tags = await self.db.find({}).to_list(length=None)
 
-        if tags is None:
+        if not tags:  # Check if tags list is empty
             return await ctx.send(':x: | You don\'t have any tags.')
 
         list_tags = [tag['name'] for tag in tags]
@@ -94,6 +94,7 @@ class TagsPlugin(commands.Cog):
 
         # Send the embed object
         await ctx.send(embed=embed, view=self.tag_select_menu)
+
 
    
 
