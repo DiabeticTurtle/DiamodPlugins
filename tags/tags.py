@@ -81,13 +81,14 @@ class TagsPlugin(commands.Cog):
     @tags.command(name='list')
     async def list_(self, ctx):
         '''Get a list of tags that have already been made.'''
+
         tags = await self.db.find({}).to_list(length=None)
 
-        if not tags:  # Check if tags list is empty
+        if not tags:
             return await ctx.send(':x: | You don\'t have any tags.')
 
         list_tags = [tag['name'] for tag in tags]
-        send_tags = 'Tags:\n' + list_tags
+        send_tags = 'Tags:\n' + '\n'.join(list_tags)
 
         # Create the embed object
         embed = discord.Embed(title="Tag List", description=send_tags, color=None)
@@ -218,29 +219,25 @@ class TagsPlugin(commands.Cog):
         if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
             await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
             return
+
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
             return
-        
+
         content = msg.content.replace(self.bot.prefix, "")
         names = content.split(" ")
 
         tag = await self.db.find_one({"name": names[0]})
-        thing = json.loads(tag["content"])
-        embed = discord.Embed.from_dict(thing['embed'])
+
         if tag is None:
             return
-        else:
-            
-            
-            
-            await msg.channel.send(embed=embed)
-            await self.db.find_one_and_update(
-                {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
-            )
-            return
 
-    async def find_db(self, name: str):
-        return await self.db.find_one({"name": name})
+        thing = json.loads(tag["content"])
+        embed = discord.Embed.from_dict(thing['embed'])
+
+        await msg.channel.send(embed=embed)
+        await self.db.find_one_and_update(
+            {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
+        )
 
     #def format_message(self, tag: str, message: discord.Message) -> Dict[str, Union[Any]]:
     #    updated_tag: Dict[str, Union[Any]]
