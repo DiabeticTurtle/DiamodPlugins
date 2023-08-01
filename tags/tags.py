@@ -95,9 +95,36 @@ class TagsPlugin(commands.Cog):
         # Send the embed object
         await ctx.send(embed=embed, view=self.tag_select_menu)
 
+    @tags.command()
+    async def select(self, ctx: commands.Context):
+        '''
+        Select a tag category from the dropdown menu.
+        '''
 
-   
+        if not self.categories:
+            return await ctx.send(':x: | There are no tags with categories.')
 
+        # Create and send the dropdown menu with the available categories
+        await ctx.send('Select a tag category:', view=self.create_tag_select_menu())
+
+        # Wait for the user to make a selection
+        interaction = await self.bot.wait_for('select_option', check=lambda i: i.user == ctx.author and i.component == self.tag_select_menu.children[0])
+
+        selected_category = interaction.values[0]
+        selected_tags = await self.db.find({"category": selected_category}).to_list(length=None)
+
+        if not selected_tags:
+            return await ctx.send(f':x: | There are no tags under the category `{selected_category}`.')
+
+        # Create the list of tags under the selected category
+        list_tags = [tag['name'] for tag in selected_tags]
+        send_tags = 'Tags: ' + ', '.join(list_tags)
+
+        # Create the embed object
+        embed = discord.Embed(title=f"Tag List - Category: {selected_category}", description=send_tags, color=None)
+
+        # Send the embed object
+        await ctx.send(embed=embed)
 
 
     @tags.command()
