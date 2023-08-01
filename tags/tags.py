@@ -35,6 +35,7 @@ class TagsPlugin(commands.Cog):
             options=[discord.SelectOption(label=tag, value=tag) for tag in tags]
         ))
         return view
+    
 class TagListPageSource(menus.ListPageSource):
     def format_page(self, menu: menus.MenuPages, entries):
         offset = menu.current_page * self.per_page
