@@ -1,14 +1,12 @@
-import json
-from typing import Any, Dict, Union
-
 import discord
 from datetime import datetime
 from discord.ext import commands
-from box import Box
 from core import checks
 from core.models import PermissionLevel
+import json
+from typing import Any, Dict, Union
+from box import Box
 from .models import apply_vars, SafeString
-
 
 class TagsPlugin(commands.Cog):
     def __init__(self, bot):
@@ -49,10 +47,10 @@ class TagsPlugin(commands.Cog):
                 f":white_check_mark: | Tag with name `{name}` has been successfully created!"
             )
             return
-        
+
     @tags.command(name='list')
     async def list_(self, ctx):
-        '''Get a list of tags that hace already been made.'''
+        '''Get a list of tags that have already been made.'''
 
         tags = await self.db.find({}).to_list(length=None)
 
@@ -74,146 +72,59 @@ class TagsPlugin(commands.Cog):
 
         # Send the embed object
         await ctx.send(embed=embed)
-   
 
-
-
-    @tags.command()
-    async def edit(self, ctx: commands.Context, name: str, *, content: str):
-        """
-        Edit an existing tag
-        Only owner of tag or user with Manage Server permissions can use this command
-        """
-        tag = await self.find_db(name=name)
-
-        if tag is None:
-            await ctx.send(f":x: | Tag with name `{name}` does'nt exist")
-            return
-        else:
-            member: discord.Member = ctx.author
-            if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
-                await self.db.find_one_and_update(
-                    {"name": name},
-                    {"$set": {"content": content, "updatedAt": datetime.utcnow()}},
-                )
-
-                await ctx.send(
-                    f":white_check_mark: | Tag `{name}` is updated successfully!"
-                )
-            else:
-                await ctx.send("You don't have enough permissions to edit that tag")
+    # ... (your other commands)
 
     @tags.command()
-    async def delete(self, ctx: commands.Context, name: str):
-        """
-        Delete a tag.
-        Only owner of tag or user with Manage Server permissions can use this command
-        """
-        tag = await self.find_db(name=name)
-        if tag is None:
-            await ctx.send(f":x: | Tag `{name}` not found in the database.")
-        else:
-            if (
-                ctx.author.id == tag["author"]
-                or ctx.author.guild_permissions.manage_guild
-            ):
-                await self.db.delete_one({"name": name})
+    async def select(self, ctx: commands.Context):
+        '''
+        Select a tag category from the dropdown menu.
+        '''
 
-                await ctx.send(
-                    f":white_check_mark: | Tag `{name}` has been deleted successfully!"
-                )
-            else:
-                await ctx.send("You don't have enough permissions to delete that tag")
+        tags = await self.db.find({}).to_list(length=None)
 
-    @tags.command()
-    async def claim(self, ctx: commands.Context, name: str):
-        """
-        Claim a tag if the user has left the server
-        """
-        tag = await self.find_db(name=name)
+        if tags is None:
+            return await ctx.send(':x: | You don\'t have any tags.')
 
-        if tag is None:
-            await ctx.send(f":x: | Tag `{name}` not found.")
-        else:
-            member = await ctx.guild.get_member(tag["author"])
-            if member is not None:
-                await ctx.send(
-                    f":x: | The owner of the tag is still in the server `{member.name}#{member.discriminator}`"
-                )
-                return
-            else:
-                await self.db.find_one_and_update(
-                    {"name": name},
-                    {"$set": {"author": ctx.author.id, "updatedAt": datetime.utcnow()}},
-                )
+        list_tags = []
 
-                await ctx.send(
-                    f":white_check_mark: | Tag `{name}` is now owned by `{ctx.author.name}#{ctx.author.discriminator}`"
-                )
+        for tag in tags:
+            try:
+                list_tags.append(tag['name'])
+            except:
+                continue
 
-    @tags.command()
-    async def info(self, ctx: commands.Context, name: str):
-        """
-        Get info on a tag
-        """
-        tag = await self.find_db(name=name)
+        # Create the dropdown options
+        options = [discord.SelectOption(label=tag, value=tag) for tag in list_tags]
 
-        if tag is None:
-            await ctx.send(f":x: | Tag `{name}` not found.")
-        else:
-            user: discord.User = await self.bot.fetch_user(tag["author"])
-            embed = discord.Embed()
-            embed.colour = discord.Colour.green()
-            embed.title = f"{name}'s Info"
-            embed.add_field(
-                name="Created By", value=f"{user.name}#{user.discriminator}"
-            )
-            embed.add_field(name="Created At", value=tag["createdAt"])
-            embed.add_field(
-                name="Last Modified At", value=tag["updatedAt"], inline=False
-            )
-            embed.add_field(name="Uses", value=tag["uses"], inline=False)
-            await ctx.send(embed=embed)
-            return
+        # Create the dropdown object
+        select = discord.ui.Select(
+            placeholder='Select a tag category...',
+            options=options
+        )
 
-    @commands.command()
-    async def tag(self, ctx: commands.Context, name: str):
-        
-        """
-        Use a tag!
-        """
-        tag = await self.find_db(name=name)
-        if tag is None:
-            await ctx.send(f":x: | Tag {name} not found.")
-            return
-        else:
-            await ctx.send("```" + tag["content"] + "```")
-            await self.db.find_one_and_update(
-                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-            )
-            return
+        # Send the dropdown menu
+        await ctx.send('Select a tag category:', view=select)
+
+        # Wait for the user to make a selection
+        interaction = await self.bot.wait_for('select_option', check=lambda i: i.user == ctx.author and i.component == select)
+
+        selected_tag = interaction.values[0]
+        await ctx.send(f'You selected the tag category: {selected_tag}')
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
-            await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
-            return
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
             return
-        
+
         content = msg.content.replace(self.bot.prefix, "")
         names = content.split(" ")
 
         tag = await self.db.find_one({"name": names[0]})
-        thing = json.loads(tag["content"])
-        embed = discord.Embed.from_dict(thing['embed'])
         if tag is None:
             return
         else:
-            
-            
-            
-            await msg.channel.send(embed=embed)
+            await msg.channel.send("```" + tag["content"] + "```")
             await self.db.find_one_and_update(
                 {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
             )
@@ -221,24 +132,6 @@ class TagsPlugin(commands.Cog):
 
     async def find_db(self, name: str):
         return await self.db.find_one({"name": name})
-
-    #def format_message(self, tag: str, message: discord.Message) -> Dict[str, Union[Any]]:
-    #    updated_tag: Dict[str, Union[Any]]
-    #    try:
-    #        updated_tag = json.loads(tag)
-    #    except json.JSONDecodeError:
-    #        # message is not embed
-    #        tag = apply_vars(self.bot, tag, message)
-    #        updated_tag = {'content': tag}
-    #    else:
-    #        # message is embed
-    #        updated_tag = self.apply_vars_dict(updated_tag, message)
-
-    #        if 'embed' in updated_tag:
-    #            updated_tag['embed'] = discord.Embed.from_dict(updated_tag['embed'])
-    #        else:
-    #            updated_tag = None
-    #    return updated_tag
 
 
 async def setup(bot):
