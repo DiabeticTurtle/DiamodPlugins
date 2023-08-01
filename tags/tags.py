@@ -3,7 +3,7 @@ from typing import Any, Dict, Union
 
 import discord
 from datetime import datetime
-from discord.ext import commands
+from discord.ext import commands, paginator
 from box import Box
 from core import checks
 from core.models import PermissionLevel
@@ -88,13 +88,16 @@ class TagsPlugin(commands.Cog):
             return await ctx.send(':x: | You don\'t have any tags.')
 
         list_tags = [tag['name'] for tag in tags]
-        send_tags = 'Tags:\n' + '\n'.join(list_tags)
+        tag_pages = [list_tags[i:i + 10] for i in range(0, len(list_tags), 10)]
 
-        # Create the embed object
-        embed = discord.Embed(title="Tag List", description=send_tags, color=None)
+        embeds = []
+        for page in tag_pages:
+            send_tags = '\n'.join([f'• {tag}' for tag in page])
+            embed = discord.Embed(title="Tag List", description=send_tags, color=None)
+            embeds.append(embed)
 
-        # Send the embed object
-        await ctx.send(embed=embed)
+        paginator_obj = paginator.Paginator(bot=self.bot, embeds=embeds)
+        await paginator_obj.start(ctx)
 
     
 
