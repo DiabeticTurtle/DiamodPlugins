@@ -3,46 +3,18 @@ from typing import Any, Dict, Union
 
 import discord
 from datetime import datetime
-from discord.ext import commands, menus
-from discord.ext.menus import ListPageSource, MenuPages
+from discord.ext import commands
 from box import Box
 from core import checks
 from core.models import PermissionLevel
 from .models import apply_vars, SafeString
 
 
-class TagSelectMenu(discord.ui.View):
-    def __init__(self, tags):
-        super().__init__()
-        self.tags = tags
-        self.add_item(discord.ui.Select(
-            placeholder='Select a tag category...',
-            options=[discord.SelectOption(label=tag, value=tag) for tag in tags]
-        ))
-
 class TagsPlugin(commands.Cog):
     def __init__(self, bot):
         self.bot: discord.Client = bot
         self.db = bot.plugin_db.get_partition(self)
-        self.categories = set()  # A set to store unique tag categories
-        self.tag_select_menu = self.create_tag_select_menu()
-
-    def create_tag_select_menu(self):
-        tags = list(self.categories)
-        view = discord.ui.View()
-        view.add_item(discord.ui.Select(
-            placeholder='Select a tag category...',
-            options=[discord.SelectOption(label=tag, value=tag) for tag in tags]
-        ))
-        return view
-    
-class TagListPageSource(menus.ListPageSource):
-    def format_page(self, menu: menus.MenuPages, entries):
-        offset = menu.current_page * self.per_page
-        joined_entries = "\n".join(f"• {name}" for name in entries[offset : offset + self.per_page])
-        embed = discord.Embed(title="Tag List", description=joined_entries)
-        return embed
-
+        
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
     @checks.has_permissions(PermissionLevel.REGULAR)
@@ -53,57 +25,57 @@ class TagListPageSource(menus.ListPageSource):
         await ctx.send_help(ctx.command)
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
+    async def add(self, ctx: commands.Context, name: str, *, content: str):
         """
-        Make a new tag with a specified category
+        Make a new tag
         """
         if (await self.find_db(name=name)) is not None:
             await ctx.send(f":x: | Tag with name `{name}` already exists!")
             return
+        else:
+            ctx.message.content = content
+            await self.db.insert_one(
+                {
+                    "name": name,
+                    "content": ctx.message.clean_content,
+                    "createdAt": datetime.utcnow(),
+                    "updatedAt": datetime.utcnow(),
+                    "author": ctx.author.id,
+                    "uses": 0,
+                }
+            )
 
-        ctx.message.content = content
-        await self.db.insert_one(
-            {
-                "name": name,
-                "content": ctx.message.clean_content,
-                "category": category,
-                "createdAt": datetime.utcnow(),
-                "updatedAt": datetime.utcnow(),
-                "author": ctx.author.id,
-                "uses": 0,
-            }
-        )
-
-        # Initialize the categories set if it doesn't exist yet
-        if not self.categories:
-            all_tags = await self.db.find({}).to_list(length=None)
-            self.categories = set(tag['category'] for tag in all_tags)
-
-        self.categories.add(category)  # Add the new category to the set of categories
-
-        await ctx.send(
-            f":white_check_mark: | Tag with name `{name}` and category `{category}` has been successfully created!"
-        )
-        return
-
+            await ctx.send(
+                f":white_check_mark: | Tag with name `{name}` has been successfully created!"
+            )
+            return
+        
     @tags.command(name='list')
     async def list_(self, ctx):
-        """Get a list of tags that have already been made."""
+        '''Get a list of tags that hace already been made.'''
+
         tags = await self.db.find({}).to_list(length=None)
 
-        if not tags:
+        if tags is None:
             return await ctx.send(':x: | You don\'t have any tags.')
+        
+        list_tags = []
 
-        # Create a list of tag names
-        list_tags = [tag['name'] for tag in tags]
+        for tag in tags:
+            try:
+                list_tags.append(tag['name'])
+            except:
+                continue
 
-        # Create a paginator to display the list in pages
-        pages = MenuPages(source=ListPageSource(list_tags, per_page=10), clear_reactions_after=True)
+        send_tags = 'Tags: ' + ', '.join(list_tags)
 
-        # Start the pagination menu
-        await pages.start(ctx)
+        # Create the embed object
+        embed = discord.Embed(title="Tag List", description=send_tags, color=None)
 
-    
+        # Send the embed object
+        await ctx.send(embed=embed)
+   
+
 
 
     @tags.command()
@@ -226,25 +198,29 @@ class TagListPageSource(menus.ListPageSource):
         if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
             await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
             return
-
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
             return
-
+        
         content = msg.content.replace(self.bot.prefix, "")
         names = content.split(" ")
 
         tag = await self.db.find_one({"name": names[0]})
-
-        if tag is None:
-            return
-
         thing = json.loads(tag["content"])
         embed = discord.Embed.from_dict(thing['embed'])
+        if tag is None:
+            return
+        else:
+            
+            
+            
+            await msg.channel.send(embed=embed)
+            await self.db.find_one_and_update(
+                {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
+            )
+            return
 
-        await msg.channel.send(embed=embed)
-        await self.db.find_one_and_update(
-            {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
-        )
+    async def find_db(self, name: str):
+        return await self.db.find_one({"name": name})
 
     #def format_message(self, tag: str, message: discord.Message) -> Dict[str, Union[Any]]:
     #    updated_tag: Dict[str, Union[Any]]
