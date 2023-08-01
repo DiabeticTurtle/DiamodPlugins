@@ -3,7 +3,7 @@ from typing import Any, Dict, Union
 
 import discord
 from datetime import datetime
-from discord.ext import commands
+from discord.ext import commands, menus
 from discord.ext.menus import ListPageSource, MenuPages
 from box import Box
 from core import checks
