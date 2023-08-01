@@ -81,24 +81,20 @@ class TagsPlugin(commands.Cog):
 
     @tags.command(name='list')
     async def list_(self, ctx):
-        '''Get a list of tags that have already been made.'''
-
+        """Get a list of tags that have already been made."""
         tags = await self.db.find({}).to_list(length=None)
 
         if not tags:
             return await ctx.send(':x: | You don\'t have any tags.')
 
+        # Create a list of tag names
         list_tags = [tag['name'] for tag in tags]
-        tag_pages = [list_tags[i:i + 10] for i in range(0, len(list_tags), 10)]
 
-        embeds = []
-        for page in tag_pages:
-            send_tags = '\n'.join([f'• {tag}' for tag in page])
-            embed = discord.Embed(title="Tag List", description=send_tags, color=None)
-            embeds.append(embed)
+        # Create a paginator to display the list in pages
+        pages = MenuPages(source=ListPageSource(list_tags, per_page=10), clear_reactions_after=True)
 
-        paginator_obj = paginator.Paginator(bot=self.bot, embeds=embeds)
-        await paginator_obj.start(ctx)
+        # Start the pagination menu
+        await pages.start(ctx)
 
     
 
