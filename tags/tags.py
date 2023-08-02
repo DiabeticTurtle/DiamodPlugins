@@ -84,7 +84,7 @@ class TagsPlugin(commands.Cog):
             print(f"Tag: {tag}, Category: {category}")
             if category not in tags_by_category:
                 tags_by_category[category] = []
-            tags_by_category[category].append(tag.get['name'])
+            tags_by_category[category].append(tag.get('name'))
 
         for category, tag_names in tags_by_category.items():
             tags_list_str = ", ".join(sorted(tag_names))  # Sort the tag_names in alphabetical order
