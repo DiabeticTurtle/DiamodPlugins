@@ -234,7 +234,7 @@ class TagsPlugin(commands.Cog):
             return
 
     @commands.command()
-    async def tag(self, ctx: commands.Context, *, name: str):
+    async def tag(self, ctx: commands.Context, name: str):
         """
         Use a tag!
         """
@@ -259,20 +259,21 @@ class TagsPlugin(commands.Cog):
                 await ctx.send(f":x: | Error while evaluating JavaScript: {str(e)}")
                 return
         else:
-            # Treat content as a regular string for the embed description
-            if " " in name:  # Check if the name contains a space
-                await ctx.send(content)
+            if ctx.prefix == '?':
+                # If command is ?tagname, send raw JSON content as a code block
+                await ctx.send(f"```\n{content}\n```")
+                await self.db.find_one_and_update(
+                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+                )
+                return
             else:
-                # If it's a ?[tagname] command, send raw JSON content in a code block
-                await ctx.send(f"```json\n{content}\n```")
-        
-            await self.db.find_one_and_update(
-                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-            )
-            return
-
-
-
+                # If command is ?tag tagname, treat content as an embed
+                embed = discord.Embed.from_dict(content)
+                await ctx.send(embed=embed)
+                await self.db.find_one_and_update(
+                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+                )
+                return
 
         # If content is a dictionary (valid JSON or JavaScript-generated)
         if isinstance(content, dict):
@@ -283,7 +284,22 @@ class TagsPlugin(commands.Cog):
             )
         else:
             await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
-        return
+
+
+
+
+
+            # If content is a dictionary (valid JSON or JavaScript-generated)
+            if isinstance(content, dict):
+                embed = discord.Embed.from_dict(content)
+                await ctx.send(embed=embed)
+                await self.db.find_one_and_update(
+                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+                )
+            else:
+                await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
+            return
+        
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
