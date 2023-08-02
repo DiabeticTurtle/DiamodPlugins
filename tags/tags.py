@@ -248,61 +248,40 @@ class TagsPlugin(commands.Cog):
             await ctx.send(f"```{code_content}```")
 
     @commands.command()
-    async def tag(self, ctx: commands.Context, name: str):
-        """
-        Use a tag!
-        """
-        tag = await self.find_db(name=name)
-        if tag is None:
-            await ctx.send(f":x: | Tag {name} not found.")
-            return
+async def tag(self, ctx: commands.Context, name: str):
+    """
+    Use a tag!
+    """
+    tag = await self.find_db(name=name)
+    if tag is None:
+        await ctx.send(f":x: | Tag {name} not found.")
+        return
 
+    try:
+        content = json.loads(tag["content"])  # Attempt to parse content as JSON
+    except json.JSONDecodeError:
+        content = tag["content"]
+
+    # Check if the tag has "embed_type" field and it contains "js"
+    if "embed_type" in tag and "js" in tag["embed_type"]:
         try:
-            content = json.loads(tag["content"])  # Attempt to parse content as JSON
-        except json.JSONDecodeError:
-            content = tag["content"]
-
-        # Check if the tag has "embed_type" field and it contains "js"
-        if "embed_type" in tag and "js" in tag["embed_type"]:
-            try:
-                # Evaluate the JavaScript code and convert the result to a dict
-                content = eval(content, {"discord": discord, "datetime": datetime})
-                if not isinstance(content, dict):
-                    raise ValueError("JavaScript code must return a dictionary for the embed.")
-            except Exception as e:
-                await ctx.send(f":x: | Error while evaluating JavaScript: {str(e)}")
-                return
-        else:
-            # Treat content as a regular string for the embed description
-            if isinstance(content, dict):
-                # If it's already a dict (valid JSON or JavaScript-generated), convert to formatted JSON string
-                content = json.dumps(content, indent=4)
-
-        # Check if the command is called with ?[tagname]
-        if ctx.message.content.startswith(self.bot.prefix + "?"):
-            # Send the content as an embed
-            if isinstance(content, dict):
-                embed = discord.Embed.from_dict(content)
-                await ctx.send(embed=embed)
-            else:
-                await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
-        else:
-            # Send the content in a code block
-            await ctx.send(f"```json\n{content}\n```")
-    
+            # Evaluate the JavaScript code and convert the result to a dict
+            content = eval(content, {"discord": discord, "datetime": datetime})
+            if not isinstance(content, dict):
+                raise ValueError("JavaScript code must return a dictionary for the embed.")
+        except Exception as e:
+            await ctx.send(f":x: | Error while evaluating JavaScript: {str(e)}")
+            return
+    else:
+        # Treat content as a regular string for the embed description
+        if isinstance(content, dict):
+            # If it's already a dict (valid JSON or JavaScript-generated), convert to formatted JSON string
+            content = json.dumps(content, indent=4)
+        embed = discord.Embed(description=content)
+        await ctx.send(embed=embed)
         await self.db.find_one_and_update(
             {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
         )
-
-        # If content is a dictionary (valid JSON or JavaScript-generated)
-        if isinstance(content, dict):
-            embed = discord.Embed.from_dict(content)
-            await ctx.send(embed=embed)
-            await self.db.find_one_and_update(
-                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-            )
-        else:
-            await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
         return
 
     @commands.Cog.listener()
