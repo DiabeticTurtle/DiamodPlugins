@@ -240,18 +240,18 @@ class TagsPlugin(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-    @commands.command()
+    @tags.command()
     async def tag(self, ctx: commands.Context, name: str):
         """
         Use a tag!
         """
         tag = await self.find_db(name=name)
         if tag is None:
-            await ctx.send(f":x: | Tag {name} not found.")
+            await ctx.send(f":x: | Tag `{name}` not found.")
             return
 
         try:
-            content = json.loads(tag["content"])  # Attempt to parse content as JSON
+            content = json.loads(tag["content"])
         except json.JSONDecodeError:
             content = tag["content"]
 
@@ -266,32 +266,24 @@ class TagsPlugin(commands.Cog):
                 await ctx.send(f":x: | Error while evaluating JavaScript: {str(e)}")
                 return
         else:
-            if ctx.prefix == '?':
-                # If command is ?tagname, send raw JSON content as a code block
-                formatted_json = json.dumps(content, indent=4)
-                await ctx.send(f"```json\n{formatted_json}\n```")
-                await self.db.find_one_and_update(
-                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-                )
-                return
-            else:
-                # If command is ?tag tagname, treat content as an embed
-                embed = discord.Embed.from_dict(content)
-                await ctx.send(embed=embed)
-                await self.db.find_one_and_update(
-                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-                )
-                return
+            # Format content as JSON
+            formatted_json = json.dumps(content, indent=4)
 
-        # If content is a dictionary (valid JSON or JavaScript-generated)
-        if isinstance(content, dict):
-            embed = discord.Embed.from_dict(content)
-            await ctx.send(embed=embed)
-            await self.db.find_one_and_update(
-                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-            )
-        else:
-            await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
+            # Check if the content exceeds 2000 characters
+            if len(formatted_json) > 2000:
+                # Content exceeds limit, send as a file
+                with open("tag_content.json", "w") as file:
+                    file.write(formatted_json)
+                await ctx.send(file=discord.File("tag_content.json"))
+            else:
+                # Content within limit, send as a code block
+                await ctx.send(f"```json\n{formatted_json}\n```")
+
+        # Update tag uses count
+        await self.db.find_one_and_update(
+            {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+        )
+
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
