@@ -164,8 +164,7 @@ class TagsPlugin(commands.Cog):
     @tags.command()
     async def edit_category(self, ctx: commands.Context, category_name: str, new_category: str):
         """
-        Edit the category of tags with the specified category_name to the new_category
-        Only the owner of the tag or a user with Manage Server permissions can use this command
+        Edit an existing Category Name
         """
         member: discord.Member = ctx.author
         if not ctx.author.guild_permissions.manage_guild:
