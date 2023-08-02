@@ -261,8 +261,7 @@ class TagsPlugin(commands.Cog):
         else:
             # Treat content as a regular string for the embed description
             if " " in name:  # Check if the name contains a space
-                embed = discord.Embed(description=content)
-                await ctx.send(embed=embed)
+                await ctx.send(content)
             else:
                 # If it's a ?[tagname] command, send raw JSON content in a code block
                 await ctx.send(f"```json\n{content}\n```")
@@ -271,6 +270,7 @@ class TagsPlugin(commands.Cog):
                 {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
             )
             return
+
 
 
 
