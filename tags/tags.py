@@ -100,7 +100,7 @@ class TagsPlugin(commands.Cog):
             await ctx.send(f":x: | Tag `{name}` not found.")
             return
         else:
-            await ctx.send(tag["content"])
+            await ctx.send("```" + tag["content"] + "```")
    
 
     @tags.command()
