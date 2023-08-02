@@ -233,8 +233,8 @@ class TagsPlugin(commands.Cog):
             await ctx.send(embed=embed)
             return
         
-    @tags.command(name='code')
-    async def code(self, ctx: commands.Context, name: str):
+    @tags.command(name='showcode')
+    async def show_code(self, ctx: commands.Context, name: str):
         """
         Get the code content of a tag as a code block.
         """
