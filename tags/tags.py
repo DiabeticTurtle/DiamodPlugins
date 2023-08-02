@@ -318,6 +318,19 @@ class TagsPlugin(commands.Cog):
         else:
             await ctx.send(f":x: | Failed to move tag `{name}` to the category `{new_category}`.")
 
+    @tags.command()
+    async def create_category(self, ctx: commands.Context, category_name: str):
+        """
+        Create a new category for tags.
+        """
+        existing_category = await self.db.find_one({"category": category_name})
+        if existing_category:
+            await ctx.send(f":x: | Category `{category_name}` already exists.")
+            return
+
+        await self.db.insert_one({"category": category_name})
+        await ctx.send(f":white_check_mark: | Category `{category_name}` has been created!")
+
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
