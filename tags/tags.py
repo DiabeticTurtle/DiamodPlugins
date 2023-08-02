@@ -117,6 +117,31 @@ class TagsPlugin(commands.Cog):
                 await ctx.send("You don't have enough permissions to edit that tag")
 
     @tags.command()
+    async def edit_category(self, ctx: commands.Context, name: str, category: str):
+        """
+        Edit the category of an existing tag
+        Only the owner of the tag or a user with Manage Server permissions can use this command
+        """
+        tag = await self.find_db(name=name)
+
+        if tag is None:
+            await ctx.send(f":x: | Tag with name `{name}` does not exist")
+            return
+
+        member: discord.Member = ctx.author
+        if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
+            await self.db.find_one_and_update(
+                {"name": name},
+                {"$set": {"category": category}},
+            )
+
+            await ctx.send(
+                f":white_check_mark: | Category of tag `{name}` has been updated to `{category}`!"
+            )
+        else:
+            await ctx.send("You don't have enough permissions to edit the category of that tag")
+
+    @tags.command()
     async def delete(self, ctx: commands.Context, name: str):
         """
         Delete a tag.
