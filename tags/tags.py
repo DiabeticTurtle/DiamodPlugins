@@ -297,31 +297,17 @@ class TagsPlugin(commands.Cog):
         if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
             await msg.channel.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
             return
-
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
             return
-
+    
         content = msg.content.replace(self.bot.prefix, "")
         names = content.split(" ")
 
-        if names[0] in ["tag", "tags"]:  # Check if the command is one of the tag commands
-            if len(names) > 1:
-                try:
-                    # Invoke the command dynamically based on the input
-                    await self.bot.get_command(names[1]).invoke(msg)
-                except commands.errors.CommandInvokeError as e:
-                    await msg.channel.send(f"Error: {str(e)}")
+        tag = await self.db.find_one({"name": names[0]})
+        if tag is None:
+            return
         else:
-            tag = await self.db.find_one({"name": names[0]})
-            if tag is None:
-                return
-            else:
-                try:
-                    thing = json.loads(tag["content"])
-                    embed = discord.Embed.from_dict(thing['embed'])
-                    await msg.channel.send(embed=embed)
-                except json.JSONDecodeError:
-                    pass
+            await self.bot.invoke(ctx=commands.Context(prefix=self.bot.prefix, message=msg), command=self.show_code, argument=names[0])
 
     async def find_db(self, name: str):
         return await self.db.find_one({"name": name})
