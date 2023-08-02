@@ -234,7 +234,7 @@ class TagsPlugin(commands.Cog):
             return
 
     @commands.command()
-    async def tag(self, ctx: commands.Context, name: str):
+    async def tag(self, ctx: commands.Context, *, name: str):
         """
         Use a tag!
         """
@@ -260,12 +260,16 @@ class TagsPlugin(commands.Cog):
                 return
         else:
             # Treat content as a regular string for the embed description
+            if isinstance(content, dict):
+                # If it's already a dict (valid JSON or JavaScript-generated), convert to formatted JSON string
+                content = json.dumps(content, indent=4)
             embed = discord.Embed(description=content)
             await ctx.send(embed=embed)
             await self.db.find_one_and_update(
                 {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
             )
             return
+
 
         # If content is a dictionary (valid JSON or JavaScript-generated)
         if isinstance(content, dict):
