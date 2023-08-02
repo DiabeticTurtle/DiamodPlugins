@@ -89,8 +89,8 @@ class TagsPlugin(commands.Cog):
         # Send the embed object
         await ctx.send(embed=embed)
 
-    @tags.command(name='code')
-    async def code(self, ctx: commands.Context, name: str):
+    @tags.command(name='plain')
+    async def plain(self, ctx: commands.Context, name: str):
         """
         Get the code content of a tag.
         """
