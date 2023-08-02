@@ -23,9 +23,10 @@ class SafeString(str):
 
 
 def apply_vars(self, member, message, invite):
-    return string.Formatter().vformat(message, [], SafeFormat(
+    safe_format = SafeFormat(
         member=member,
         guild=member.guild,
         bot=self.bot.user,
         invite=invite
-    ))
+    )
+    return string.Formatter().vformat(message, [], safe_format)
