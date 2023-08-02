@@ -286,7 +286,6 @@ class TagsPlugin(commands.Cog):
         else:
             await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
 
-        
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
