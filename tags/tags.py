@@ -293,22 +293,22 @@ class TagsPlugin(commands.Cog):
         return
 
     @commands.Cog.listener()
-async def on_message(self, msg: discord.Message):
-    if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
-        await msg.channel.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
-        return
-    if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
-        return
+    async def on_message(self, msg: discord.Message):
+        if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
+            await msg.channel.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
+            return
+        if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
+            return
     
-    content = msg.content.replace(self.bot.prefix, "")
-    names = content.split(" ")
+        content = msg.content.replace(self.bot.prefix, "")
+        names = content.split(" ")
 
-    tag = await self.db.find_one({"name": names[0]})
-    if tag is None:
-        return
-    else:
-        ctx = await self.bot.get_context(msg)
-        await self.show_code(ctx, names[0])
+        tag = await self.db.find_one({"name": names[0]})
+        if tag is None:
+            return
+        else:
+            ctx = await self.bot.get_context(msg)
+            await self.show_code(ctx, names[0])
 
     async def find_db(self, name: str):
         return await self.db.find_one({"name": name})
