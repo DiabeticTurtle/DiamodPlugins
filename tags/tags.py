@@ -95,6 +95,28 @@ class TagsPlugin(commands.Cog):
         # Send the embed object
         await ctx.send(embed=embed)
 
+    @tags.command()
+    async def delete_category(self, ctx, category_name: str):
+        """
+        Delete a category and move tags to Unidentified category.
+        """
+        tags_to_move = await self.db.find({"category": category_name}).to_list(length=None)
+
+        if not tags_to_move:
+            await ctx.send(f":x: | No tags found in category '{category_name}'")
+            return
+
+        # Move tags to Unidentified category
+        for tag in tags_to_move:
+            await self.db.find_one_and_update(
+                {"name": tag["name"]},
+                {"$set": {"category": "Unidentified"}},
+            )
+
+        await self.db.delete_many({"category": category_name})
+
+        await ctx.send(f":white_check_mark: | Deleted category '{category_name}' and moved {len(tags_to_move)} tags to 'Unidentified' category.")
+
    
 
 
