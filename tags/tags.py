@@ -280,20 +280,30 @@ class TagsPlugin(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
-            await msg.channel.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
+            await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
             return
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
             return
-    
+        
         content = msg.content.replace(self.bot.prefix, "")
         names = content.split(" ")
 
         tag = await self.db.find_one({"name": names[0]})
+    
         if tag is None:
             return
-        else:
-            ctx = await self.bot.get_context(msg)
-            await self.show_code(ctx, names[0])
+
+        try:
+            thing = json.loads(tag["content"])
+        except json.JSONDecodeError:
+            await msg.channel.send("Error: The content of this tag is not valid JSON.")
+            return
+
+        embed = discord.Embed.from_dict(thing['embed'])
+        await msg.channel.send(embed=embed)
+        await self.db.find_one_and_update(
+            {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
+        )
 
     async def find_db(self, name: str):
         return await self.db.find_one({"name": name})
