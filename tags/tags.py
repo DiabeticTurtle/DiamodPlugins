@@ -245,21 +245,22 @@ class TagsPlugin(commands.Cog):
         names = content.split(" ")
 
         tag = await self.db.find_one({"name": names[0]})
-    
+        thing = json.loads(tag["content"])
+        embed = discord.Embed.from_dict(thing['embed'])
         if tag is None:
             return
-
-        try:
-            thing = json.loads(tag["content"])
-        except json.JSONDecodeError:
-            await msg.channel.send("Error: The content of this tag is not valid JSON.")
+        else:
+            
+            
+            
+            await msg.channel.send(embed=embed)
+            await self.db.find_one_and_update(
+                {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
+            )
             return
 
-        embed = discord.Embed.from_dict(thing['embed'])
-        await msg.channel.send(embed=embed)
-        await self.db.find_one_and_update(
-            {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
-        )
+    async def find_db(self, name: str):
+        return await self.db.find_one({"name": name})
 
 
 async def setup(bot):
