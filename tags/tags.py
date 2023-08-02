@@ -324,23 +324,42 @@ class TagsPlugin(commands.Cog):
             await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
 
     @tags.command()
-    async def move_category(self, ctx: commands.Context, name: str, new_category: str):
+    async def move_category(self, ctx: commands.Context, new_category: str, *tag_names: str):
         """
-        Move a tag to a specific category.
+        Move tags to a specific category.
         """
-        tag = await self.find_db(name=name)
-        if tag is None:
-            await ctx.send(f":x: | Tag `{name}` not found.")
+        if not tag_names:
+            await ctx.send(":x: | Please provide at least one tag name to move.")
             return
 
-        updated_tag = await self.db.find_one_and_update(
-            {"name": name}, {"$set": {"category": new_category}}
-        )
+        moved_tags = []
+        failed_tags = []
 
-        if updated_tag:
-            await ctx.send(f":white_check_mark: | Tag `{name}` has been moved to the category `{new_category}`!")
-        else:
-            await ctx.send(f":x: | Failed to move tag `{name}` to the category `{new_category}`.")
+        for tag_name in tag_names:
+            tag = await self.find_db(name=tag_name)
+            if tag is None:
+                failed_tags.append(tag_name)
+                continue
+
+            updated_tag = await self.db.find_one_and_update(
+                {"name": tag_name}, {"$set": {"category": new_category}}
+            )
+
+            if updated_tag:
+                moved_tags.append(tag_name)
+            else:
+                failed_tags.append(tag_name)
+
+        moved_count = len(moved_tags)
+        failed_count = len(failed_tags)
+
+        response = []
+        if moved_count > 0:
+            response.append(f":white_check_mark: | Moved {moved_count} tag(s) to the category `{new_category}`: {', '.join(moved_tags)}")
+        if failed_count > 0:
+            response.append(f":x: | Failed to move {failed_count} tag(s): {', '.join(failed_tags)}")
+
+        await ctx.send("\n".join(response))
 
     @tags.command()
     async def create_category(self, ctx: commands.Context, category_name: str):
