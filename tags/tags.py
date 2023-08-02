@@ -82,11 +82,14 @@ class TagsPlugin(commands.Cog):
             category = tag.get('category', 'Unidentified')
             tag_name = tag.get('name', 'No Name')
 
+
             if category not in tags_by_category:
                 tags_by_category[category] = []
 
             if tag_name != 'No Name':
                 tags_by_category[category].append(tag_name)
+
+        sorted_categories = sorted(tags_by_category.keys())  # Sort categories alphabetically
 
         for category, tag_names in tags_by_category.items():
             tags_list_str = ", ".join(sorted(tag_names))  # Sort the tag_names in alphabetical order
