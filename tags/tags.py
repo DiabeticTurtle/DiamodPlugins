@@ -232,20 +232,6 @@ class TagsPlugin(commands.Cog):
             embed.add_field(name="Uses", value=tag["uses"], inline=False)
             await ctx.send(embed=embed)
             return
-        
-    @tags.command(name='showcode')
-    async def show_code(self, ctx: commands.Context, name: str):
-        """
-        Get the code content of a tag as a code block.
-        """
-        tag = await self.find_db(name=name)
-
-        if tag is None:
-            await ctx.send(f":x: | Tag `{name}` not found.")
-            return
-        else:
-            code_content = tag['content']
-            await ctx.send(f"```{code_content}```")
 
     @commands.command()
     async def tag(self, ctx: commands.Context, name: str):
@@ -274,9 +260,6 @@ class TagsPlugin(commands.Cog):
                 return
         else:
             # Treat content as a regular string for the embed description
-            if isinstance(content, dict):
-                # If it's already a dict (valid JSON or JavaScript-generated), convert to formatted JSON string
-                content = json.dumps(content, indent=4)
             embed = discord.Embed(description=content)
             await ctx.send(embed=embed)
             await self.db.find_one_and_update(
@@ -284,6 +267,16 @@ class TagsPlugin(commands.Cog):
             )
             return
 
+        # If content is a dictionary (valid JSON or JavaScript-generated)
+        if isinstance(content, dict):
+            embed = discord.Embed.from_dict(content)
+            await ctx.send(embed=embed)
+            await self.db.find_one_and_update(
+                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+            )
+        else:
+            await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
+        return
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
