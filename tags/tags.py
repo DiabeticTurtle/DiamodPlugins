@@ -101,6 +101,12 @@ class TagsPlugin(commands.Cog):
         Edit an existing tag
         Only the owner of the tag or a user with Manage Server permissions can use this command
         """
+        # Retrieve the tag from the database
+        tag = await self.find_db(name=name)
+        if tag is None:
+            await ctx.send(f":x: | Tag `{name}` not found in the database.")
+            return
+
         # Check if the content starts and ends with triple backticks
         code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
 
@@ -120,18 +126,19 @@ class TagsPlugin(commands.Cog):
                 await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
                 return
 
-            member: discord.Member = ctx.author
-            if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
-                await self.db.find_one_and_update(
-                    {"name": name},
-                    {"$set": {"content": content, "updatedAt": datetime.utcnow(), "category": category}},
-                )
+        member: discord.Member = ctx.author
+        if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
+            await self.db.find_one_and_update(
+                {"name": name},
+                {"$set": {"content": content, "updatedAt": datetime.utcnow(), "category": category}},
+            )
 
-                await ctx.send(
-                    f":white_check_mark: | Tag `{name}` is updated successfully in the category `{category}`!"
-                )
-            else:
-                await ctx.send("You don't have enough permissions to edit that tag")
+            await ctx.send(
+                f":white_check_mark: | Tag `{name}` is updated successfully in the category `{category}`!"
+            )
+        else:
+            await ctx.send("You don't have enough permissions to edit that tag")
+
 
     @tags.command()
     async def edit_category(self, ctx: commands.Context, category_name: str, new_category: str):
