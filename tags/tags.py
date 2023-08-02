@@ -266,31 +266,31 @@ class TagsPlugin(commands.Cog):
                 await ctx.send(f":x: | Error while evaluating JavaScript: {str(e)}")
                 return
         else:
-            if ctx.prefix == '?':
-                # If command is ?tagname, send raw JSON content as a code block
-                formatted_json = json.dumps(content, indent=4)
-                await ctx.send(f"```json\n{formatted_json}\n```")
-            else:
-                # If command is ?tag tagname, treat content as an embed
-                embed = discord.Embed.from_dict(content)
-                await ctx.send(embed=embed)
-            
+    
+            # Treat content as a regular string for the embed description
+            formatted_json = json.dumps(content, indent=4)
+        
+            # Split the formatted JSON into chunks
+            chunk_size = 1996  # Leave room for code block markers
+            chunks = [formatted_json[i:i + chunk_size] for i in range(0, len(formatted_json), chunk_size)]
+        
+            for chunk in chunks:
+                await ctx.send(f"```json\n{chunk}\n```")
+        
             await self.db.find_one_and_update(
                 {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
             )
-
             return
 
         # If content is a dictionary (valid JSON or JavaScript-generated)
         if isinstance(content, dict):
             embed = discord.Embed.from_dict(content)
             await ctx.send(embed=embed)
-        await self.db.find_one_and_update(
-            {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-        )
+            await self.db.find_one_and_update(
+                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+            )
         else:
-        await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
-        
+            await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
         return
 
 
