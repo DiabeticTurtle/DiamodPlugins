@@ -30,39 +30,42 @@ class TagsPlugin(commands.Cog):
         """
         Make a new tag
         """
-        if (await self.find_db(name=name)) is not None:
-            await ctx.send(f":x: | Tag with name `{name}` already exists!")
-            return
-        else:
+        # Check if the content starts and ends with triple backticks
+        code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
+
+        if code_block_match:
+            # If it's a code block, treat it as JavaScript code
+            content = code_block_match.group(2)
             try:
-                # Attempt to parse content as JSON
+                eval(content, {"discord": discord, "datetime": datetime})
+            except Exception as e:
+                await ctx.send(f":x: | The provided content is not valid JavaScript. Error: {str(e)}")
+                return
+        else:
+            # If it's not a code block, try to parse it as JSON
+            try:
                 json.loads(content)
             except json.JSONDecodeError:
-                # If it's not valid JSON, treat it as JavaScript code and try to evaluate it
-                try:
-                    eval(content, {"discord": discord, "datetime": datetime})
-                except Exception as e:
-                    await ctx.send(f":x: | The provided content is not valid JSON or JavaScript. Error: {str(e)}")
-                    return
+                await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
+                return
 
-            # Save the tag to the database
-            ctx.message.content = content
-            await self.db.insert_one(
-                {
-                    "name": name,
-                    "content": ctx.message.clean_content,
-                    "createdAt": datetime.utcnow(),
-                    "updatedAt": datetime.utcnow(),
-                    "author": ctx.author.id,
-                    "uses": 0,
-                    "category": category,
-                }
-            )
+        # Save the tag to the database
+        await self.db.insert_one(
+            {
+                "name": name,
+                "content": content,
+                "createdAt": datetime.utcnow(),
+                "updatedAt": datetime.utcnow(),
+                "author": ctx.author.id,
+                "uses": 0,
+                "category": category,
+            }
+        )
 
-            await ctx.send(
-                f":white_check_mark: | Tag with name `{name}` has been successfully created in the category `{category}`!"
-            )
-            return
+        await ctx.send(
+            f":white_check_mark: | Tag with name `{name}` has been successfully created in the category `{category}`!"
+        )
+
         
     @tags.command(name='list')
     async def list_(self, ctx):
@@ -98,22 +101,24 @@ class TagsPlugin(commands.Cog):
         Edit an existing tag
         Only the owner of the tag or a user with Manage Server permissions can use this command
         """
-        tag = await self.find_db(name=name)
+        # Check if the content starts and ends with triple backticks
+        code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
 
-        if tag is None:
-            await ctx.send(f":x: | Tag with name `{name}` does not exist")
-            return
-        else:
+        if code_block_match:
+            # If it's a code block, treat it as JavaScript code
+            content = code_block_match.group(2)
             try:
-                # Attempt to parse content as JSON
+                eval(content, {"discord": discord, "datetime": datetime})
+            except Exception as e:
+                await ctx.send(f":x: | The provided content is not valid JavaScript. Error: {str(e)}")
+                return
+        else:
+            # If it's not a code block, try to parse it as JSON
+            try:
                 json.loads(content)
             except json.JSONDecodeError:
-                # If it's not valid JSON, treat it as JavaScript code and try to evaluate it
-                try:
-                    eval(content, {"discord": discord, "datetime": datetime})
-                except Exception as e:
-                    await ctx.send(f":x: | The provided content is not valid JSON or JavaScript. Error: {str(e)}")
-                    return
+                await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
+                return
 
             member: discord.Member = ctx.author
             if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
