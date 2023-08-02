@@ -117,29 +117,31 @@ class TagsPlugin(commands.Cog):
                 await ctx.send("You don't have enough permissions to edit that tag")
 
     @tags.command()
-    async def edit_category(self, ctx: commands.Context, name: str, category: str):
+    async def edit_category(self, ctx: commands.Context, category_name: str, new_category: str):
         """
-        Edit the category of an existing tag
+        Edit the category of tags with the specified category_name to the new_category
         Only the owner of the tag or a user with Manage Server permissions can use this command
         """
-        tag = await self.find_db(name=name)
-
-        if tag is None:
-            await ctx.send(f":x: | Tag with name `{name}` does not exist")
+        member: discord.Member = ctx.author
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.send("You don't have enough permissions to edit the category of tags.")
             return
 
-        member: discord.Member = ctx.author
-        if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
+        tags_to_update = await self.db.find({"category": category_name}).to_list(length=None)
+
+        if not tags_to_update:
+            await ctx.send(f":x: | Category `{category_name}` does not exist or has no tags.")
+            return
+
+        for tag in tags_to_update:
             await self.db.find_one_and_update(
-                {"name": name},
-                {"$set": {"category": category}},
+                {"name": tag["name"]},
+                {"$set": {"category": new_category}},
             )
 
-            await ctx.send(
-                f":white_check_mark: | Category of tag `{name}` has been updated to `{category}`!"
-            )
-        else:
-            await ctx.send("You don't have enough permissions to edit the category of that tag")
+        await ctx.send(
+            f":white_check_mark: | Category of all tags with category `{category_name}` has been updated to `{new_category}`!"
+        )
 
     @tags.command()
     async def delete(self, ctx: commands.Context, name: str):
