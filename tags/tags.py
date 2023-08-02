@@ -24,6 +24,7 @@ class TagsPlugin(commands.Cog):
         """
         await ctx.send_help(ctx.command)
 
+
     @tags.command()
     async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
@@ -34,11 +35,17 @@ class TagsPlugin(commands.Cog):
             return
         else:
             try:
-                json.loads(content)  # Attempt to parse content as JSON
+                # Attempt to parse content as JSON
+                json.loads(content)
             except json.JSONDecodeError:
-                await ctx.send(":x: | The provided content is not valid JSON.")
-                return
+                # If it's not valid JSON, treat it as JavaScript code and try to evaluate it
+                try:
+                    eval(content, {"discord": discord, "datetime": datetime})
+                except Exception as e:
+                    await ctx.send(f":x: | The provided content is not valid JSON or JavaScript. Error: {str(e)}")
+                    return
 
+            # Save the tag to the database
             ctx.message.content = content
             await self.db.insert_one(
                 {
@@ -89,7 +96,7 @@ class TagsPlugin(commands.Cog):
     async def edit(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Edit an existing tag
-        Only owner of tag or user with Manage Server permissions can use this command
+        Only the owner of the tag or a user with Manage Server permissions can use this command
         """
         tag = await self.find_db(name=name)
 
@@ -98,10 +105,15 @@ class TagsPlugin(commands.Cog):
             return
         else:
             try:
-                json.loads(content)  # Attempt to parse content as JSON
+                # Attempt to parse content as JSON
+                json.loads(content)
             except json.JSONDecodeError:
-                await ctx.send(":x: | The provided content is not valid JSON.")
-                return
+                # If it's not valid JSON, treat it as JavaScript code and try to evaluate it
+                try:
+                    eval(content, {"discord": discord, "datetime": datetime})
+                except Exception as e:
+                    await ctx.send(f":x: | The provided content is not valid JSON or JavaScript. Error: {str(e)}")
+                    return
 
             member: discord.Member = ctx.author
             if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
@@ -218,7 +230,6 @@ class TagsPlugin(commands.Cog):
 
     @commands.command()
     async def tag(self, ctx: commands.Context, name: str):
-        
         """
         Use a tag!
         """
@@ -226,12 +237,41 @@ class TagsPlugin(commands.Cog):
         if tag is None:
             await ctx.send(f":x: | Tag {name} not found.")
             return
+
+        try:
+            content = json.loads(tag["content"])  # Attempt to parse content as JSON
+        except json.JSONDecodeError:
+            content = tag["content"]
+
+        # Check if the tag has "embed_type" field and it contains "js"
+        if "embed_type" in tag and "js" in tag["embed_type"]:
+            try:
+                # Evaluate the JavaScript code and convert the result to a dict
+                content = eval(content, {"discord": discord, "datetime": datetime})
+                if not isinstance(content, dict):
+                    raise ValueError("JavaScript code must return a dictionary for the embed.")
+            except Exception as e:
+                await ctx.send(f":x: | Error while evaluating JavaScript: {str(e)}")
+                return
         else:
-            await ctx.send("```" + tag["content"] + "```")
+            # Treat content as a regular string for the embed description
+            embed = discord.Embed(description=content)
+            await ctx.send(embed=embed)
             await self.db.find_one_and_update(
                 {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
             )
             return
+
+        # If content is a dictionary (valid JSON or JavaScript-generated)
+        if isinstance(content, dict):
+            embed = discord.Embed.from_dict(content)
+            await ctx.send(embed=embed)
+            await self.db.find_one_and_update(
+                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+            )
+        else:
+            await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
+        return
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
