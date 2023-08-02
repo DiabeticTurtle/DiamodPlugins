@@ -240,7 +240,7 @@ class TagsPlugin(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-    @commands.command()
+    @tags.command()
     async def tag(self, ctx: commands.Context, name: str):
         """
         Use a tag!
@@ -251,7 +251,7 @@ class TagsPlugin(commands.Cog):
             return
 
         try:
-            content = json.loads(tag["content"])  # Attempt to parse content as JSON
+            content = json.loads(tag["content"])
         except json.JSONDecodeError:
             content = tag["content"]
 
@@ -270,28 +270,29 @@ class TagsPlugin(commands.Cog):
                 # If command is ?tagname, send raw JSON content as a code block
                 formatted_json = json.dumps(content, indent=4)
                 await ctx.send(f"```json\n{formatted_json}\n```")
-                await self.db.find_one_and_update(
-                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-                )
-                return
             else:
                 # If command is ?tag tagname, treat content as an embed
                 embed = discord.Embed.from_dict(content)
                 await ctx.send(embed=embed)
-                await self.db.find_one_and_update(
-                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-                )
-                return
+            
+            await self.db.find_one_and_update(
+                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+            )
+
+            return
 
         # If content is a dictionary (valid JSON or JavaScript-generated)
         if isinstance(content, dict):
             embed = discord.Embed.from_dict(content)
             await ctx.send(embed=embed)
-            await self.db.find_one_and_update(
-                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-            )
+        await self.db.find_one_and_update(
+            {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+        )
         else:
-            await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
+        await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
+        
+        return
+
 
         
     @commands.Cog.listener()
