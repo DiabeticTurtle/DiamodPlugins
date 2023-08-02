@@ -82,7 +82,12 @@ class TagsPlugin(commands.Cog):
         for tag in tags:
             category = tag.get('category', 'Unidentified')
             tag_name = tag.get('name', 'No Name')
+
+            # Skip 'No Name' tags
+            if tag_name == 'No Name':
+                continue
         
+
             if category not in tags_by_category:
                 tags_by_category[category] = []
             tags_by_category[category].append(tag_name)
