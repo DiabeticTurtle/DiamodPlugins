@@ -33,6 +33,12 @@ class TagsPlugin(commands.Cog):
             await ctx.send(f":x: | Tag with name `{name}` already exists!")
             return
         else:
+            try:
+                json.loads(content)  # Attempt to parse content as JSON
+            except json.JSONDecodeError:
+                await ctx.send(":x: | The provided content is not valid JSON.")
+                return
+
             ctx.message.content = content
             await self.db.insert_one(
                 {
@@ -47,7 +53,7 @@ class TagsPlugin(commands.Cog):
             )
 
             await ctx.send(
-                f":white_check_mark: | Tag with name `{name}` has been successfully created!"
+                f":white_check_mark: | Tag with name `{name}` has been successfully created in the category `{category}`!"
             )
             return
         
