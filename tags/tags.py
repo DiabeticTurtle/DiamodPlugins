@@ -299,6 +299,26 @@ class TagsPlugin(commands.Cog):
         else:
             await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
 
+    @tags.command()
+    async def move_category(self, ctx: commands.Context, name: str, new_category: str):
+        """
+        Move a tag to a specific category.
+        """
+        tag = await self.find_db(name=name)
+        if tag is None:
+            await ctx.send(f":x: | Tag `{name}` not found.")
+            return
+
+        updated_tag = await self.db.find_one_and_update(
+            {"name": name}, {"$set": {"category": new_category}}
+        )
+
+        if updated_tag:
+            await ctx.send(f":white_check_mark: | Tag `{name}` has been moved to the category `{new_category}`!")
+        else:
+            await ctx.send(f":x: | Failed to move tag `{name}` to the category `{new_category}`.")
+
+
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
