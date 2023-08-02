@@ -101,12 +101,6 @@ class TagsPlugin(commands.Cog):
         Edit an existing tag
         Only the owner of the tag or a user with Manage Server permissions can use this command
         """
-        # Retrieve the tag from the database
-        tag = await self.find_db(name=name)
-        if tag is None:
-            await ctx.send(f":x: | Tag `{name}` not found in the database.")
-            return
-    
         # Check if the content starts and ends with triple backticks
         code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
 
@@ -126,19 +120,18 @@ class TagsPlugin(commands.Cog):
                 await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
                 return
 
-        member: discord.Member = ctx.author
-        if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
-            await self.db.find_one_and_update(
-                {"name": name},
-                {"$set": {"content": content, "updatedAt": datetime.utcnow(), "category": category}},
-            )
+            member: discord.Member = ctx.author
+            if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
+                await self.db.find_one_and_update(
+                    {"name": name},
+                    {"$set": {"content": content, "updatedAt": datetime.utcnow(), "category": category}},
+                )
 
-            await ctx.send(
-                f":white_check_mark: | Tag `{name}` is updated successfully in the category `{category}`!"
-            )
-        else:
-            await ctx.send("You don't have enough permissions to edit that tag")
-
+                await ctx.send(
+                    f":white_check_mark: | Tag `{name}` is updated successfully in the category `{category}`!"
+                )
+            else:
+                await ctx.send("You don't have enough permissions to edit that tag")
 
     @tags.command()
     async def edit_category(self, ctx: commands.Context, category_name: str, new_category: str):
@@ -240,7 +233,7 @@ class TagsPlugin(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-    @tags.command()
+    @commands.command()
     async def tag(self, ctx: commands.Context, name: str):
         """
         Use a tag!
@@ -251,7 +244,7 @@ class TagsPlugin(commands.Cog):
             return
 
         try:
-            content = json.loads(tag["content"])
+            content = json.loads(tag["content"])  # Attempt to parse content as JSON
         except json.JSONDecodeError:
             content = tag["content"]
 
@@ -266,21 +259,22 @@ class TagsPlugin(commands.Cog):
                 await ctx.send(f":x: | Error while evaluating JavaScript: {str(e)}")
                 return
         else:
-    
-            # Treat content as a regular string for the embed description
-            formatted_json = json.dumps(content, indent=4)
-        
-            # Split the formatted JSON into chunks
-            chunk_size = 1996  # Leave room for code block markers
-            chunks = [formatted_json[i:i + chunk_size] for i in range(0, len(formatted_json), chunk_size)]
-        
-            for chunk in chunks:
-                await ctx.send(f"```json\n{chunk}\n```")
-        
-            await self.db.find_one_and_update(
-                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-            )
-            return
+            if ctx.prefix == '?':
+                # If command is ?tagname, send raw JSON content as a code block
+                formatted_json = json.dumps(content, indent=4)
+                await ctx.send(f"```json\n{formatted_json}\n```")
+                await self.db.find_one_and_update(
+                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+                )
+                return
+            else:
+                # If command is ?tag tagname, treat content as an embed
+                embed = discord.Embed.from_dict(content)
+                await ctx.send(embed=embed)
+                await self.db.find_one_and_update(
+                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+                )
+                return
 
         # If content is a dictionary (valid JSON or JavaScript-generated)
         if isinstance(content, dict):
@@ -291,8 +285,6 @@ class TagsPlugin(commands.Cog):
             )
         else:
             await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
-        return
-
 
         
     @commands.Cog.listener()
