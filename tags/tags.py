@@ -261,7 +261,8 @@ class TagsPlugin(commands.Cog):
         else:
             if ctx.prefix == '?':
                 # If command is ?tagname, send raw JSON content as a code block
-                await ctx.send(f"```\n{content}\n```")
+                formatted_json = json.dumps(content, indent=4)
+                await ctx.send(f"```json\n{formatted_json}\n```")
                 await self.db.find_one_and_update(
                     {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
                 )
@@ -285,20 +286,6 @@ class TagsPlugin(commands.Cog):
         else:
             await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
 
-
-
-
-
-            # If content is a dictionary (valid JSON or JavaScript-generated)
-            if isinstance(content, dict):
-                embed = discord.Embed.from_dict(content)
-                await ctx.send(embed=embed)
-                await self.db.find_one_and_update(
-                    {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
-                )
-            else:
-                await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
-            return
         
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
