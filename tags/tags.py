@@ -97,6 +97,12 @@ class TagsPlugin(commands.Cog):
             await ctx.send(f":x: | Tag with name `{name}` does not exist")
             return
         else:
+            try:
+                json.loads(content)  # Attempt to parse content as JSON
+            except json.JSONDecodeError:
+                await ctx.send(":x: | The provided content is not valid JSON.")
+                return
+
             member: discord.Member = ctx.author
             if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
                 await self.db.find_one_and_update(
@@ -105,7 +111,7 @@ class TagsPlugin(commands.Cog):
                 )
 
                 await ctx.send(
-                    f":white_check_mark: | Tag `{name}` is updated successfully!"
+                    f":white_check_mark: | Tag `{name}` is updated successfully in the category `{category}`!"
                 )
             else:
                 await ctx.send("You don't have enough permissions to edit that tag")
