@@ -76,7 +76,7 @@ class TagsPlugin(commands.Cog):
             tags_by_category[category].append(tag['name'])
 
         for category, tag_names in tags_by_category.items():
-            tags_list_str = ", ".join(tag_names)
+            tags_list_str = ", ".join(sorted(tag_names))  # Sort the tag_names in alphabetical order
             embed.add_field(name=f"{category} Tags", value=tags_list_str, inline=False)
 
         # Send the embed object
