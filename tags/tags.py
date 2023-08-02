@@ -88,20 +88,9 @@ class TagsPlugin(commands.Cog):
 
         # Send the embed object
         await ctx.send(embed=embed)
-
-    @tags.command(name='plain')
-    async def plain(self, ctx: commands.Context, name: str):
-        """
-        Get the code content of a tag.
-        """
-        tag = await self.find_db(name=name)
-
-        if tag is None:
-            await ctx.send(f":x: | Tag `{name}` not found.")
-            return
-        else:
-            await ctx.send("```" + tag["content"] + "```")
    
+
+
 
     @tags.command()
     async def edit(self, ctx: commands.Context, name: str, category: str, *, content: str):
