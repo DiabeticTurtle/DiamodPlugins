@@ -106,9 +106,6 @@ class TagsPlugin(commands.Cog):
             if 'name' in tag:
                 tags_to_update.append(tag)
 
-        if not tags_to_update:
-            return await ctx.send(f":x: | No tags found in the category '{category}'.")
-
         for tag in tags_to_update:
             await self.db.find_one_and_update(
                 {"_id": tag["_id"]},
