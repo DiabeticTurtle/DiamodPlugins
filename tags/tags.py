@@ -260,15 +260,18 @@ class TagsPlugin(commands.Cog):
                 return
         else:
             # Treat content as a regular string for the embed description
-            if isinstance(content, dict):
-                # If it's already a dict (valid JSON or JavaScript-generated), convert to formatted JSON string
-                content = json.dumps(content, indent=4)
-            embed = discord.Embed(description=content)
-            await ctx.send(embed=embed)
+            if " " in name:  # Check if the name contains a space
+                embed = discord.Embed(description=content)
+                await ctx.send(embed=embed)
+            else:
+                # If it's a ?[tagname] command, send raw JSON content in a code block
+                await ctx.send(f"```json\n{content}\n```")
+        
             await self.db.find_one_and_update(
                 {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
             )
             return
+
 
 
         # If content is a dictionary (valid JSON or JavaScript-generated)
