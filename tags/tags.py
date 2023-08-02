@@ -25,7 +25,7 @@ class TagsPlugin(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, *, content: str):
+    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Make a new tag
         """
@@ -42,6 +42,7 @@ class TagsPlugin(commands.Cog):
                     "updatedAt": datetime.utcnow(),
                     "author": ctx.author.id,
                     "uses": 0,
+                    "category": category,
                 }
             )
 
@@ -52,25 +53,25 @@ class TagsPlugin(commands.Cog):
         
     @tags.command(name='list')
     async def list_(self, ctx):
-        '''Get a list of tags that hace already been made.'''
+        '''Get a list of tags that have already been made.'''
 
         tags = await self.db.find({}).to_list(length=None)
 
-        if tags is None:
+        if not tags:
             return await ctx.send(':x: | You don\'t have any tags.')
-        
-        list_tags = []
 
+        embed = discord.Embed(title="Tag List", color=None)
+
+        tags_by_category = {}
         for tag in tags:
-            try:
-                list_tags.append(tag['name'])
-            except:
-                continue
+            category = tag.get('category', 'Unidentified')
+            if category not in tags_by_category:
+                tags_by_category[category] = []
+            tags_by_category[category].append(tag['name'])
 
-        send_tags = 'Tags: ' + ', '.join(list_tags)
-
-        # Create the embed object
-        embed = discord.Embed(title="Tag List", description=send_tags, color=None)
+        for category, tag_names in tags_by_category.items():
+            tags_list_str = ", ".join(tag_names)
+            embed.add_field(name=f"{category} Tags", value=tags_list_str, inline=False)
 
         # Send the embed object
         await ctx.send(embed=embed)
@@ -79,7 +80,7 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def edit(self, ctx: commands.Context, name: str, *, content: str):
+    async def edit(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Edit an existing tag
         Only owner of tag or user with Manage Server permissions can use this command
@@ -87,14 +88,14 @@ class TagsPlugin(commands.Cog):
         tag = await self.find_db(name=name)
 
         if tag is None:
-            await ctx.send(f":x: | Tag with name `{name}` does'nt exist")
+            await ctx.send(f":x: | Tag with name `{name}` does not exist")
             return
         else:
             member: discord.Member = ctx.author
             if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
                 await self.db.find_one_and_update(
                     {"name": name},
-                    {"$set": {"content": content, "updatedAt": datetime.utcnow()}},
+                    {"$set": {"content": content, "updatedAt": datetime.utcnow(), "category": category}},
                 )
 
                 await ctx.send(
@@ -221,24 +222,6 @@ class TagsPlugin(commands.Cog):
 
     async def find_db(self, name: str):
         return await self.db.find_one({"name": name})
-
-    #def format_message(self, tag: str, message: discord.Message) -> Dict[str, Union[Any]]:
-    #    updated_tag: Dict[str, Union[Any]]
-    #    try:
-    #        updated_tag = json.loads(tag)
-    #    except json.JSONDecodeError:
-    #        # message is not embed
-    #        tag = apply_vars(self.bot, tag, message)
-    #        updated_tag = {'content': tag}
-    #    else:
-    #        # message is embed
-    #        updated_tag = self.apply_vars_dict(updated_tag, message)
-
-    #        if 'embed' in updated_tag:
-    #            updated_tag['embed'] = discord.Embed.from_dict(updated_tag['embed'])
-    #        else:
-    #            updated_tag = None
-    #    return updated_tag
 
 
 async def setup(bot):
