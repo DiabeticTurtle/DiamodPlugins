@@ -30,25 +30,6 @@ class TagsPlugin(commands.Cog):
         """
         Make a new tag
         """
-        # Check if the content starts and ends with triple backticks
-        code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
-
-        if code_block_match:
-            # If it's a code block, treat it as JavaScript code
-            content = code_block_match.group(2)
-            try:
-                eval(content, {"discord": discord, "datetime": datetime})
-            except Exception as e:
-                await ctx.send(f":x: | The provided content is not valid JavaScript. Error: {str(e)}")
-                return
-        else:
-            # If it's not a code block, try to parse it as JSON
-            try:
-                json.loads(content)
-            except json.JSONDecodeError:
-                await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
-                return
-
         # Save the tag to the database
         await self.db.insert_one(
             {
@@ -129,37 +110,19 @@ class TagsPlugin(commands.Cog):
         Edit an existing tag
         Only the owner of the tag or a user with Manage Server permissions can use this command
         """
-        # Check if the content starts and ends with triple backticks
-        code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
+        member: discord.Member = ctx.author
+        if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
+            await self.db.find_one_and_update(
+                {"name": name},
+                {"$set": {"content": content, "updatedAt": datetime.utcnow(), "category": category}},
+            )
 
-        if code_block_match:
-            # If it's a code block, treat it as JavaScript code
-            content = code_block_match.group(2)
-            try:
-                eval(content, {"discord": discord, "datetime": datetime})
-            except Exception as e:
-                await ctx.send(f":x: | The provided content is not valid JavaScript. Error: {str(e)}")
-                return
+            await ctx.send(
+                f":white_check_mark: | Tag `{name}` is updated successfully in the category `{category}`!"
+            )
         else:
-            # If it's not a code block, try to parse it as JSON
-            try:
-                json.loads(content)
-            except json.JSONDecodeError:
-                await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
-                return
+            await ctx.send("You don't have enough permissions to edit that tag")
 
-            member: discord.Member = ctx.author
-            if ctx.author.id == tag["author"] or member.guild_permissions.manage_guild:
-                await self.db.find_one_and_update(
-                    {"name": name},
-                    {"$set": {"content": content, "updatedAt": datetime.utcnow(), "category": category}},
-                )
-
-                await ctx.send(
-                    f":white_check_mark: | Tag `{name}` is updated successfully in the category `{category}`!"
-                )
-            else:
-                await ctx.send("You don't have enough permissions to edit that tag")
 
     @tags.command()
     async def edit_category(self, ctx: commands.Context, category_name: str, new_category: str):
