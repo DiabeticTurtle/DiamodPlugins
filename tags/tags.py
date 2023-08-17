@@ -130,6 +130,24 @@ class TagsPlugin(commands.Cog):
         Only the owner of the tag or a user with Manage Server permissions can use this command
         """
         tag = await self.find_db(name=name)
+        # Check if the content starts and ends with triple backticks
+        code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
+
+        if code_block_match:
+            # If it's a code block, treat it as JavaScript code
+            content = code_block_match.group(2)
+            try:
+                eval(content, {"discord": discord, "datetime": datetime})
+            except Exception as e:
+                await ctx.send(f":x: | The provided content is not valid JavaScript. Error: {str(e)}")
+                return
+        else:
+            # If it's not a code block, try to parse it as JSON
+            try:
+                json.loads(content)
+            except json.JSONDecodeError:
+                await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
+                return
     
         if not tag:
             await ctx.send(f":x: | Tag `{name}` not found in the database.")
