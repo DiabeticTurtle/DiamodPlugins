@@ -153,7 +153,7 @@ class Args(commands.Converter):
     __slots__ = "vals"
 
     @classmethod
-    async def convert(cls, ctx: commands.Context, argument: str, allowed_roles: List[int] = None) -> ArgsParserRawData:
+    async def convert(cls, ctx: commands.Context, argument: str) -> ArgsParserRawData:
         argument = argument.replace("—", "--")
         parser = NoExitParser(description="Targeter argument parser", add_help=False)
 
@@ -446,7 +446,6 @@ class Args(commands.Converter):
             vals["format"] = vals["format"][0].lower()
         self = cls()
         self.vals = vals
-        self.allowed_roles = allowed_roles
         return vals
 
     def __getitem__(self, item: str):

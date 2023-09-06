@@ -81,8 +81,6 @@ _bind_session = (
     f" - `Label` - Button label (only available for button). Must not exceed {Limit.button_label} characters.\n"
     "- **Clear** - Clear all binds.\n\n"
 )
-has_allowed_role = any(role.id in self.allowed_roles for role in ctx.author.roles)
-
 
 
 class RoleManager(commands.Cog, name=__plugin_name__):
