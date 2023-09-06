@@ -954,6 +954,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         channel: Optional[discord.TextChannel] = None,
         *,
         title: str = None,
+        ignored_roles: commands.Greedy[discord.Role] = None,  # Add this line
     ):
         """
         Create a new reaction roles menu.
@@ -965,7 +966,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         __**Notes:**__
         - This command will initiate the button and text input interactive session.
         """
-        done_session = "The reaction roles {} has been posted."  # format hyperlink message.jump_url
+        done_session = "The reaction roles {} has been posted."
         input_sessions = [
             {"key": "type", "description": _type_session},
             {"key": "rule", "description": _rule_session},
@@ -973,6 +974,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
             {"key": "done", "description": done_session},
         ]
         reactrole = self.reactrole_manager.create_new()
+        reactrole.ignored_roles = [role.id for role in ignored_roles] if ignored_roles else []  # Store ignored roles
         view = ReactionRoleCreationPanel(ctx, reactrole, input_sessions=input_sessions)
         if title is None:
             title = "Reaction Roles"
@@ -1012,9 +1014,10 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         await view.message.edit(embed=embed, view=view)
         await reactrole.manager.update()
 
+
     @reactrole.command(name="edit", aliases=["add"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    async def reactrole_edit(self, ctx: commands.Context, message: discord.Message):
+    async def reactrole_edit(self, ctx: commands.Context, message: discord.Message, ignored_roles: commands.Greedy[discord.Role] = None):  # Add ignored_roles parameter
         """
         Edit by adding role-button or role-emoji binds to a message specified.
         This can be used if you want to create a reaction roles menu on a pre-existing message.
@@ -1041,6 +1044,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
             {"key": "done", "description": done_session},
         ]
         input_sessions.extend(abs_sessions)
+        reactrole.ignored_roles = [role.id for role in ignored_roles] if ignored_roles else []  # Update ignored roles
         view = ReactionRoleCreationPanel(
             ctx,
             reactrole,
@@ -1080,6 +1084,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         if new:
             self.reactrole_manager.add(reactrole)
         await reactrole.manager.update()
+
 
     @reactrole.command(name="rule")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
