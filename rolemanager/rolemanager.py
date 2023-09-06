@@ -1103,7 +1103,10 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         `Normal` - Allow users to have multiple roles in group.
         `Unique` - Remove existing role when assigning another role in group.
 
-        Leave the `rule` empty to get the current set configuration.
+        `allowed_roles` may be a list of roles or role mentions that are allowed to react to buttons.
+        `ignored_roles` may be a list of roles or role mentions that are ignored and cannot react to buttons.
+
+        Leave the `rule`, `allowed_roles`, and `ignored_roles` empty to get the current set configuration.
         """
         if isinstance(message, int):
             message_id = message
@@ -1131,6 +1134,17 @@ class RoleManager(commands.Cog, name=__plugin_name__):
             )
 
         reactrole.rules = rules
+
+        if allowed_roles:
+            reactrole.allowed_roles = [role.id for role in allowed_roles]
+        else:
+            reactrole.allowed_roles = []  # Reset allowed_roles if not provided
+
+        if ignored_roles:
+            reactrole.ignored_roles = [role.id for role in ignored_roles]
+        else:
+            reactrole.ignored_roles = []  # Reset ignored_roles if not provided
+
         await reactrole.manager.update()
         await ctx.send(
             embed=self.base_embed(f"Reaction role's rule for that message is now set to `{rules.value}`.")
