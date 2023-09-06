@@ -113,14 +113,24 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         self.reactrole_manager.entries.clear()
 
     async def is_allowed_to_react(user, reaction_role):
+        print(f"User: {user}")
+        print(f"User Roles: {user.roles}")
+        print(f"Allowed Roles: {reaction_role.allowed_roles}")
+
         member = reaction_role.get_member(user)  # Implement this function to get the member object
+        print(f"Member: {member}")
+
         if member:
             # Check if any of the user's roles are in the allowed_roles list
             user_roles = [role.id for role in member.roles]
+            print(f"User Roles IDs: {user_roles}")
+
             for role_id in user_roles:
                 if role_id in reaction_role.allowed_roles:
                     return True
+
         return False
+
 
     async def initialize(self) -> None:
         await self.bot.wait_for_connected()
