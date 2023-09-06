@@ -145,7 +145,11 @@ _RULES = [
     ("normal", "Allow users to have multiple roles in group."),
     ("unique", "Remove existing role when assigning another role in group."),
 ]
-allowed_roles = [(str(role.id), role.name) for role in guild.roles]
+allowed_roles = []
+try:
+    allowed_roles = [(str(role.id), role.name) for role in guild.roles]
+except Exception as e:
+    print(f"Error fetching roles: {e}")
 _BUTTON_STYLES = [
     ("blurple", None),
     ("green", None),
