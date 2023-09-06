@@ -145,9 +145,7 @@ _RULES = [
     ("normal", "Allow users to have multiple roles in group."),
     ("unique", "Remove existing role when assigning another role in group."),
 ]
-_ALLOWED_ROLES = [
-    ()
-]
+allowed_roles = [(str(role.id), role.name) for role in guild.roles]
 _BUTTON_STYLES = [
     ("blurple", None),
     ("green", None),
@@ -196,10 +194,6 @@ class ReactionRoleCreationPanel(RoleManagerView):
         self.add_buttons()
         self.refresh()
 
-    def add_roles_selection(self):
-        # Create options for the allowed_roles and ignored_roles Select components
-        allowed_roles_options = []
-        ignored_roles_options = []
 
 
     def add_menu(self) -> None:
