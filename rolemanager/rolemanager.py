@@ -1404,6 +1404,10 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         reactrole = manager.find_entry(payload.message_id)
         if reactrole is None:
             return
+        user_roles = set(payload.member.roles)
+        allowed_roles = set(reactrole.allowed_roles)
+        if not user_roles.intersection(allowed_roles):
+            return
         await reactrole.handle_reaction(payload)
 
     @commands.Cog.listener()
