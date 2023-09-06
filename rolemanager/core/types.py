@@ -10,11 +10,13 @@ class ReactRolePayload(TypedDict):
     binds: List[Dict[str, Any]]
     rules: str
     type: str
+    allowed_roles: List[int]
 
 
 class ReactRoleConfigPayload(TypedDict):
     data: List[ReactRolePayload]
     enable: bool
+    allowed_roles: List[int]
 
 
 class AutoRoleConfigPayload(TypedDict):
