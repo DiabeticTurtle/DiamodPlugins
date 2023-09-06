@@ -1092,21 +1092,23 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         self,
         ctx: commands.Context,
         message: Union[discord.Message, ObjectConverter, int],
-        rules: str.upper = None,
+        rules: str = None,
+        allowed_roles: commands.Greedy[discord.Role] = None,
+        ignored_roles: commands.Greedy[discord.Role] = None,
     ):
         """
-        Set a rule for an existing reaction roles message.
+        Set rules for an existing reaction roles message.
 
         `message` may be a message ID, message link, or format of `channelid-messageid`.
 
-        Available options for `rule`:
+        Available options for `rules` (comma-separated):
         `Normal` - Allow users to have multiple roles in group.
         `Unique` - Remove existing role when assigning another role in group.
 
         `allowed_roles` may be a list of roles or role mentions that are allowed to react to buttons.
         `ignored_roles` may be a list of roles or role mentions that are ignored and cannot react to buttons.
 
-        Leave the `rule`, `allowed_roles`, and `ignored_roles` empty to get the current set configuration.
+        Leave `rules`, `allowed_roles`, and `ignored_roles` empty to get the current set configuration.
         """
         if isinstance(message, int):
             message_id = message
@@ -1121,34 +1123,34 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         if rules is None:
             return await ctx.send(
                 embed=self.base_embed(
-                    f"Reaction role rules for that message is currently set to `{old_rules.value}`."
+                    f"Reaction role rules for that message are currently set to `{', '.join(old_rules)}`."
                 )
             )
-        rules = ReactRules.from_value(rules)
-        if rules not in (ReactRules.NORMAL, ReactRules.UNIQUE):
-            raise commands.BadArgument(f"Invalid option for reaction role's rule.")
 
-        if rules == old_rules:
-            raise commands.BadArgument(
-                f"Reaction role's rule for that message is already set to `{old_rules.value}`."
-            )
+        rules = [rule.strip() for rule in rules.split(",")]
+
+        for rule in rules:
+            rule = rule.strip().upper()
+            if rule not in (ReactRules.NORMAL.value, ReactRules.UNIQUE.value):
+                raise commands.BadArgument(f"Invalid option for reaction role's rule: {rule}")
 
         reactrole.rules = rules
 
         if allowed_roles:
             reactrole.allowed_roles = [role.id for role in allowed_roles]
         else:
-            reactrole.allowed_roles = []  # Reset allowed_roles if not provided
+            reactrole.allowed_roles = []
 
         if ignored_roles:
             reactrole.ignored_roles = [role.id for role in ignored_roles]
         else:
-            reactrole.ignored_roles = []  # Reset ignored_roles if not provided
+            reactrole.ignored_roles = []
 
         await reactrole.manager.update()
         await ctx.send(
-            embed=self.base_embed(f"Reaction role's rule for that message is now set to `{rules.value}`.")
+            embed=self.base_embed(f"Reaction role rules for that message are now set to `{', '.join(rules)}`.")
         )
+
 
     @reactrole.group(name="delete", aliases=["remove"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
