@@ -101,7 +101,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         self.config = RoleManagerConfig(self, self.db)
         self.reactrole_manager: ReactionRoleManager = MISSING
         self.autorole_manager: AutoRoleManager = MISSING
-        
+        self.allowed_roles = []
 
     async def cog_load(self) -> None:
         """
