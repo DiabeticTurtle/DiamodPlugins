@@ -357,18 +357,40 @@ class ReactionRole:
             embed.description = f"Role {role.mention} is now removed from you."
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    async def handle_reaction(self, payload: discord.RawReactionActionEvent) -> None:
-        guild = self.bot.get_guild(payload.guild_id)
-        member = payload.member or guild.get_member(payload.user_id)
+    async def handle_reaction_or_button(self, reaction, user, payload: discord.RawReactionActionEvent = None, is_button=False) -> None:
+        guild = self.bot.get_guild(payload.guild_id) if payload else reaction.message.guild
+        reactrole = self.find_entry(reaction.message.id)
+        user_roles = [role.id for role in user.roles]
+        ignored_roles = reactrole.ignored_roles
+        allowed_roles = reactrole.allowed_roles
+        member = payload.member if payload else guild.get_member(user.id)
+    
+        if any(role_id in user_roles for role_id in ignored_roles):
+            return
+        
+        if allowed_roles and not any(role_id in user_roles for role_id in allowed_roles):
+            return
+        
         if member is None or member.bot or not guild.me.guild_permissions.manage_roles:
             return
 
-        bind = self.get_bind_from(emoji=payload.emoji)
+        bind = None
+
+        if is_button:
+            # Handle button interaction
+            custom_id = payload.data['custom_id']
+            message_id, role_id = custom_id.split("-")
+            bind = self.get_bind_from(role=discord.utils.get(guild.roles, id=int(role_id)))
+        else:
+            # Handle reaction
+            bind = self.get_bind_from(emoji=reaction.emoji)
+
         if bind is None:
             return
 
         role = bind.role
-        if payload.event_type == "REACTION_ADD":
+
+        if payload and payload.event_type == "REACTION_ADD" or is_button:
             if role not in member.roles:
                 await member.add_roles(role, reason="Reaction role.")
             if self.rules == ReactRules.UNIQUE:
@@ -379,14 +401,6 @@ class ReactionRole:
             if role in member.roles:
                 await member.remove_roles(role, reason="Reaction role.")
 
-    def to_dict(self) -> ReactRolePayload:
-        return {
-            "message": self.message.id,
-            "channel": self.channel.id,
-            "binds": [bind.to_dict() for bind in self.binds],
-            "rules": self.rules.value,
-            "type": self.trigger_type.value,
-        }
 
 
 class ReactionRoleManager:
