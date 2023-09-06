@@ -146,7 +146,7 @@ class TagsPlugin(commands.Cog):
             try:
                 json.loads(content)
             except json.JSONDecodeError:
-                await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
+                await ctx.send(":x: | The provided content is not valid JSON or JavaScript.")
                 return
     
         if not tag:
@@ -335,7 +335,7 @@ class TagsPlugin(commands.Cog):
                 {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
             )
         else:
-            await ctx.send(f":x: | Invalid JSON or JavaScript-generated embed content.")
+            await ctx.send(":x: | Invalid JSON or JavaScript-generated embed content.")
 
     @tags.command()
     async def move_category(self, ctx: commands.Context, new_category: str, *tag_names: str):
