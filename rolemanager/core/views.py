@@ -193,6 +193,12 @@ class ReactionRoleCreationPanel(RoleManagerView):
         self.add_buttons()
         self.refresh()
 
+    def add_roles_selection(self):
+        # Create options for the allowed_roles and ignored_roles Select components
+        allowed_roles_options = []
+        ignored_roles_options = []
+
+
     def add_menu(self) -> None:
         attrs = None
         if self.session_key == "type":
