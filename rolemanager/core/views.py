@@ -26,6 +26,7 @@ logger = getLogger(__name__)
 _short_length = 256
 
 
+
 class Modal(ui.Modal):
 
     children: List[ui.TextInput]
@@ -77,11 +78,12 @@ class Select(ui.Select):
 class Button(ui.Button):
     def __init__(self, *args, callback: Callback, **kwargs):
         self.followup_callback: Callback = callback
+        self.guild = guild
         super().__init__(*args, **kwargs)
 
     async def callback(self, interaction: Interaction) -> None:
         assert self.view is not None
-        await self.followup_callback(interaction, self)
+        await self.followup_callback(interaction, self, self.guild)
 
 
 class RoleManagerView(ui.View):
@@ -97,9 +99,11 @@ class RoleManagerView(ui.View):
         *,
         message: Union[discord.Message, discord.PartialMessage] = MISSING,
         timeout: float = 600.0,
+        guild:discord.Guild
     ):
         self.message: Union[discord.Message, discord.PartialMessage] = message
         self.cog: RoleManager = cog
+        self.guild = guild 
         super().__init__(timeout=timeout)
 
     async def on_error(self, interaction: Interaction, error: Exception, item: Any) -> None:
@@ -145,10 +149,8 @@ _RULES = [
     ("normal", "Allow users to have multiple roles in group."),
     ("unique", "Remove existing role when assigning another role in group."),
 ]
-allowed_roles = [
+allowed_roles = [(str(role.id), role.name) for role in guild.roles],
 
-    ("allowed_roles" = [(str(role.id), role.name) for role in guild.roles]"add roles that can react"),
-]
 _BUTTON_STYLES = [
     ("blurple", None),
     ("green", None),
