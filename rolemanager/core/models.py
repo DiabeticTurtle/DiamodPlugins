@@ -38,6 +38,8 @@ class AutoRoleManager:
         self.cog: RoleManager = cog
         self.roles: List[str] = data.pop("roles", [])
         self._enable: bool = data.pop("enable", False)
+        self.ignored_roles: List[str] = data.pop("ignored_roles", [])
+        self.allowed_roles: List[str] = data.pop("allowed_roles", [])
 
     def is_enabled(self) -> bool:
         """
@@ -205,6 +207,8 @@ class ReactionRole:
         binds: List[Bind] = MISSING,
         trigger_type: TriggerType = TriggerType.REACTION,
         rules: ReactRules = ReactRules.NORMAL,
+        ignored_roles: List[str] = [],
+        allowed_roles: List[str] = [],
     ):
         self.manager: ReactionRoleManager = manager
         self.bot: ModmailBot = manager.bot
@@ -213,6 +217,8 @@ class ReactionRole:
         self.trigger_type: TriggerType = trigger_type
         self.rules: ReactRules = rules
         self.view: ReactionRoleView = MISSING  # set in ReactionRoleView
+        self.ignored_roles: List[str] = ignored_roles
+        self.allowed_roles: List[str] = allowed_roles
 
     def __hash__(self):
         return hash((self.message.id, self.channel.id))
