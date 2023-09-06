@@ -146,7 +146,7 @@ class TagsPlugin(commands.Cog):
             try:
                 json.loads(content)
             except json.JSONDecodeError:
-                await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
+                await ctx.send(":x: | The provided content is not valid JSON or JavaScript.")
                 return
     
         if not tag:
