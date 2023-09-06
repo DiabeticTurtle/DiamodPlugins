@@ -99,6 +99,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         self.config = RoleManagerConfig(self, self.db)
         self.reactrole_manager: ReactionRoleManager = MISSING
         self.autorole_manager: AutoRoleManager = MISSING
+        self.allowed_roles = []
 
     async def cog_load(self) -> None:
         """
@@ -110,6 +111,16 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         for entry in self.reactrole_manager.entries:
             entry.view.stop()
         self.reactrole_manager.entries.clear()
+
+    async def is_allowed_to_react(user, reaction_role):
+        member = reaction_role.get_member(user)  # Implement this function to get the member object
+        if member:
+            # Check if any of the user's roles are in the allowed_roles list
+            user_roles = [role.id for role in member.roles]
+            for role_id in user_roles:
+                if role_id in reaction_role.allowed_roles:
+                    return True
+        return False
 
     async def initialize(self) -> None:
         await self.bot.wait_for_connected()
@@ -954,7 +965,6 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         channel: Optional[discord.TextChannel] = None,
         *,
         title: str = None,
-        ignored_roles: commands.Greedy[discord.Role] = None,  # Add this line
     ):
         """
         Create a new reaction roles menu.
@@ -974,7 +984,6 @@ class RoleManager(commands.Cog, name=__plugin_name__):
             {"key": "done", "description": done_session},
         ]
         reactrole = self.reactrole_manager.create_new()
-        reactrole.ignored_roles = [role.id for role in ignored_roles] if ignored_roles else []  # Store ignored roles
         view = ReactionRoleCreationPanel(ctx, reactrole, input_sessions=input_sessions)
         if title is None:
             title = "Reaction Roles"
@@ -1014,10 +1023,9 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         await view.message.edit(embed=embed, view=view)
         await reactrole.manager.update()
 
-
     @reactrole.command(name="edit", aliases=["add"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    async def reactrole_edit(self, ctx: commands.Context, message: discord.Message, ignored_roles: commands.Greedy[discord.Role] = None):  # Add ignored_roles parameter
+    async def reactrole_edit(self, ctx: commands.Context, message: discord.Message, allowed_roles: commands.Greedy[discord.Role] = None):  # Add allowed_roles parameter
         """
         Edit by adding role-button or role-emoji binds to a message specified.
         This can be used if you want to create a reaction roles menu on a pre-existing message.
@@ -1044,7 +1052,10 @@ class RoleManager(commands.Cog, name=__plugin_name__):
             {"key": "done", "description": done_session},
         ]
         input_sessions.extend(abs_sessions)
-        reactrole.ignored_roles = [role.id for role in ignored_roles] if ignored_roles else []  # Update ignored roles
+    
+        # Update allowed_roles here
+        reactrole.allowed_roles = [role.id for role in allowed_roles] if allowed_roles else []
+    
         view = ReactionRoleCreationPanel(
             ctx,
             reactrole,
@@ -1086,6 +1097,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         await reactrole.manager.update()
 
 
+
     @reactrole.command(name="rule")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def reactrole_rule(
@@ -1094,7 +1106,6 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         message: Union[discord.Message, ObjectConverter, int],
         rules: str = None,
         allowed_roles: commands.Greedy[discord.Role] = None,
-        ignored_roles: commands.Greedy[discord.Role] = None,
     ):
         """
         Set rules for an existing reaction roles message.
@@ -1104,11 +1115,8 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         Available options for `rules` (comma-separated):
         `Normal` - Allow users to have multiple roles in group.
         `Unique` - Remove existing role when assigning another role in group.
-
-        `allowed_roles` may be a list of roles or role mentions that are allowed to react to buttons.
-        `ignored_roles` may be a list of roles or role mentions that are ignored and cannot react to buttons.
-
-        Leave `rules`, `allowed_roles`, and `ignored_roles` empty to get the current set configuration.
+        `allowed_roles`  a list of roles that when chosen are allowed to react to buttons.
+        Leave `rules` empty to get the current set configuration.
         """
         if isinstance(message, int):
             message_id = message
@@ -1140,11 +1148,6 @@ class RoleManager(commands.Cog, name=__plugin_name__):
             reactrole.allowed_roles = [role.id for role in allowed_roles]
         else:
             reactrole.allowed_roles = []
-
-        if ignored_roles:
-            reactrole.ignored_roles = [role.id for role in ignored_roles]
-        else:
-            reactrole.ignored_roles = []
 
         await reactrole.manager.update()
         await ctx.send(

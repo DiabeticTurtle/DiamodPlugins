@@ -145,6 +145,9 @@ _RULES = [
     ("normal", "Allow users to have multiple roles in group."),
     ("unique", "Remove existing role when assigning another role in group."),
 ]
+_ALLOWED_ROLES = [
+    ()
+]
 _BUTTON_STYLES = [
     ("blurple", None),
     ("green", None),
@@ -209,6 +212,12 @@ class ReactionRoleCreationPanel(RoleManagerView):
             attrs = _RULES
             category = "rule"
             placeholder = "Choose a rule"
+        elif self.session_key == "allowed roles":
+            guild = self.ctx.guild
+            allowed_roles = [(str(role.id), role.name) for role in guild.roles]
+            attrs = allowed_roles
+            category = "allowed roles"
+            placeholder = "Select roles that can react"
         elif self.session_key == "bind":
             if self.model.trigger_type and self.model.trigger_type == TriggerType.INTERACTION:
                 attrs = _BUTTON_STYLES
