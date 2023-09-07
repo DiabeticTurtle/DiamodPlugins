@@ -5,7 +5,7 @@ import typing
 
 import discord
 from discord.ext import commands
-from discord.ui import Button, View
+from discord.ui import Button, Select, SelectOption, View
 
 from core import checks
 from core.models import PermissionLevel
@@ -25,6 +25,12 @@ class ReactionRoleView(View):
         self.ctx = ctx
         self.roles = roles
         self.add_item(discord.ui.Button(label="Add Role", custom_id="add_role"))
+        
+    async def on_button_click(self, button: discord.ui.Button, interaction: discord.Interaction):
+        pass
+
+    async def on_select_option(self, interaction: discord.Interaction):
+        pass
 
     async def cancel_button(self, button: discord.ui.Button, interaction: discord.Interaction):
         # Handle cancel button click
@@ -376,7 +382,7 @@ class rr(commands.Cog):
         await self.db.find_one_and_update(
         {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
         await ctx.send("Succesfully unlocked the reaction role.")
-        
+
     @reactionrole.command(name="make", aliases=["menu"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)        
     async def rr_make(self, ctx):
