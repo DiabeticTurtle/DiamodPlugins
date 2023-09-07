@@ -519,72 +519,97 @@ class rr(commands.Cog):
     async def on_raw_reaction_add(self, payload):
         if not payload.guild_id:
             return
-        
+
         config = await self.db.find_one({"_id": "config"})
-        
+
         emote = payload.emoji.name if payload.emoji.id is None else str(payload.emoji.id)
         emoji = payload.emoji.name if payload.emoji.id is None else payload.emoji
-        
+
         guild = self.bot.get_guild(payload.guild_id)
         member = discord.utils.get(guild.members, id=payload.user_id)
-        
+
         if member.bot:
             return
-        
+
         try:
             msg_id = config[emote]["msg_id"]
         except (KeyError, TypeError):
-            return
-        
-        if payload.message_id != int(msg_id):
-            return
-        
-        ignored_roles = config[emote].get("ignored_roles")
-        if ignored_roles:
-            for role_id in ignored_roles:
-                role = discord.utils.get(guild.roles, id=role_id)
-                if role in member.roles:
+            msg_id = None
+
+        if msg_id and payload.message_id == int(msg_id):
+            # Handle button interactions
+            if payload.event_type == "MESSAGE_COMPONENT":
+                if payload.custom_id.startswith("assign_role:"):
+                    role_id = int(payload.custom_id.split(":")[1])
+                    role = discord.utils.get(guild.roles, id=role_id)
+
+                    if role:
+                        if role in member.roles:
+                            await member.remove_roles(role)
+                            await member.send(f"You've been removed from the {role.name} role!")
+                        else:
+                            await member.add_roles(role)
+                            await member.send(f"You've been assigned the {role.name} role!")
+
+            # Handle emoji reactions
+            else:
+                reaction_rule = config[emote].get("reaction_rule", "normal")  # Default to "normal"
+                
+                if reaction_rule == "unique":
+                    # Handle the "unique" reaction rule (Only one reaction allowed)
+                    for emote_key, data in config.items():
+                        if emote_key != emote:
+                            # Remove other reactions
+                            await self._remove_reaction(payload, emote_key, member)
+
+                ignored_roles = config[emote].get("ignored_roles")
+                if ignored_roles:
+                    for role_id in ignored_roles:
+                        role = discord.utils.get(guild.roles, id=role_id)
+                        if role in member.roles:
+                            await self._remove_reaction(payload, emoji, member)
+                            return
+
+                whitelist = config[emote].get("whitelist", [])
+                if whitelist:
+                    if not any(role.id in whitelist for role in member.roles):
+                        await self._remove_reaction(payload, emoji, member)
+                        return
+
+                state = config[emote].get("state", "unlocked")
+                if state and state == "locked":
                     await self._remove_reaction(payload, emoji, member)
                     return
-        
-        state = config[emote].get("state", "unlocked")
-        if state and state == "locked":
-            await self._remove_reaction(payload, emoji, member)
-            return
-        
-        rrole = config[emote]["role"]
-        role = discord.utils.get(guild.roles, id=int(rrole))
 
-        if role:
-            await member.add_roles(role)
+                rrole = config[emote]["role"]
+                role = discord.utils.get(guild.roles, id=int(rrole))
+
+                if role:
+                    await member.add_roles(role)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         if payload.guild_id is None:
             return
-        
+
         config = await self.db.find_one({"_id": "config"})
         emote = payload.emoji.name if payload.emoji.id is None else str(payload.emoji.id)
 
         try:
             msg_id = config[emote]["msg_id"]
         except (KeyError, TypeError):
-            msg_id = None        
+            msg_id = None
 
-                                                              
-        if payload.message_id == int(msg_id):
-            guild = self.bot.get_guild(payload.guild_id)
-            rrole = config[emote]["role"]
-            role = discord.utils.get(guild.roles, id=int(rrole))
-
+        if msg_id and payload.message_id == int(msg_id):
+            # Handle emoji reactions
             if payload.event_type == "REACTION_REMOVE":
                 guild = self.bot.get_guild(payload.guild_id)
                 rrole = config[emote]["role"]
-                role = discord.utils.get(guild.roles, id=int(rrole))            
+                role = discord.utils.get(guild.roles, id=int(rrole))
 
-            if role:
-                member = discord.utils.get(guild.members, id=payload.user_id)
-                await member.remove_roles(role)
+                if role:
+                    member = discord.utils.get(guild.members, id=payload.user_id)
+                    await member.remove_roles(role)
                 
     async def _remove_reaction(self, payload, emoji, member):
         channel = self.bot.get_channel(payload.channel_id)
