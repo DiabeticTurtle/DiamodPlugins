@@ -58,7 +58,7 @@ class rr(commands.Cog):
         """Assign roles to your members with Reactions"""
         await ctx.send_help(ctx.command)
         
-    @reactionrole.command(name="add", aliases=["make"])
+    @reactionrole.command(name="add", aliases=["create"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def rr_add(self, ctx, message: str, role: discord.Role, emoji: Emoji,
                      ignored_roles: commands.Greedy[discord.Role] = None):
