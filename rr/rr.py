@@ -22,6 +22,67 @@ class ReactionRoleView(discord.ui.View):
         self.ctx = ctx
         self.roles = roles
 
+        self.button_styles = [
+            Button(style=discord.ButtonStyle.primary, label="Primary"),
+            Button(style=discord.ButtonStyle.secondary, label="Secondary"),
+            Button(style=discord.ButtonStyle.success, label="Success"),
+            Button(style=discord.ButtonStyle.danger, label="Danger"),
+        ]
+        for button in self.button_styles:
+            self.add_item(button)
+
+        self.reaction_rule = Select(
+            placeholder="Select Reaction Rule",
+            options=[
+                SelectOption(label="Unique Reaction (One choice only)", value="unique"),
+                SelectOption(label="Normal Reaction (Select all that apply)", value="normal"),
+            ],
+        )
+        self.add_item(self.reaction_rule)
+
+        # Create a dropdown for role whitelist selection
+        self.role_whitelist = Select(
+            placeholder="Select Whitelist Roles (Optional)",
+            options=[
+                SelectOption(label=role.name, value=str(role.id)) for role in roles
+            ],
+            max_values=len(roles),
+        )
+        self.add_item(self.role_whitelist)
+
+        # Create a dropdown for role blacklist selection
+        self.role_blacklist = Select(
+            placeholder="Select Blacklist Roles (Optional)",
+            options=[
+                SelectOption(label=role.name, value=str(role.id)) for role in roles
+            ],
+            max_values=len(roles),
+        )
+        self.add_item(self.role_blacklist)
+
+    async def on_select_option(self, interaction):
+        pass
+
+        for role in roles:
+            # Create a button for each role
+            button = Button(style=discord.ButtonStyle.primary, label=role.name, custom_id=f"assign_role:{role.id}")
+            self.add_item(button)
+
+    async def on_button_click(self, interaction):
+        if interaction.custom_id.startswith("assign_role:"):
+            # Handle the button click event
+            role_id = int(interaction.custom_id.split(":")[1])
+            role = discord.utils.get(self.roles, id=role_id)
+            member = interaction.user
+
+            if role and role not in member.roles:
+                await member.add_roles(role)
+                await interaction.response.send_message(f"You've been assigned the {role.name} role!", ephemeral=True)
+            elif role and role in member.roles:
+                await member.remove_roles(role)
+                await interaction.response.send_message(f"You've been removed from the {role.name} role!", ephemeral=True)
+
+
 class rr(commands.Cog):
     """Assign roles to your members with Reactions"""
 
@@ -34,9 +95,9 @@ class rr(commands.Cog):
     async def reactionrole(self, ctx: commands.Context):
         """Assign roles to your members with Reactions"""
         await ctx.send_help(ctx.command)
-
+        
     @reactionrole.command(name="add", aliases=["create"])
-    @commands.has_permissions(administrator=True)
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def rr_add(self, ctx, message: str, role: discord.Role, emoji: Emoji,
                      ignored_roles: commands.Greedy[discord.Role] = None):
         """
@@ -115,59 +176,62 @@ class rr(commands.Cog):
     async def rr_whitelist(self, ctx):
         """Manage the whitelist for reaction roles."""
         await ctx.send_help(ctx.command)
-
-    @rr_whitelist.command(name="add")
-    @commands.has_permissions(administrator=True)
-    async def whitelist_add(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
-        """Add roles to the whitelist for a reaction role."""
-        emote = emoji.name if emoji.id is None else str(emoji.id)
-        config = await self.db.find_one({"_id": "config"})
-        valid, msg = self.valid_emoji(emote, config)
-        if not valid:
-            return await ctx.send(msg)
-
-        whitelist = config[emote].get("whitelist", [])
-
-        for role in roles:
-            if role.id not in whitelist:
-                whitelist.append(role.id)
         
-        config[emote]["whitelist"] = whitelist
-        await self.db.find_one_and_update(
-            {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
-        
-        whitelist_mentions = [f"<@&{role_id}>" for role_id in whitelist]
-        
-        embed = discord.Embed(title="Successfully added roles to the whitelist.", color=discord.Color.green())
-        try:
-            embed.add_field(name=f"Current whitelist for {emoji}", value=" ".join(whitelist_mentions))
-        except HTTPException:
-            pass
-        await ctx.send(embed=embed)
-        
-    @rr_whitelist.command(name="remove")
+    @reactionrole.group(name="whitelist", invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    async def whitelist_remove(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
-        """Remove roles from the whitelist for a reaction role."""
-        emote = emoji.name if emoji.id is None else str(emoji.id)
-        config = await self.db.find_one({"_id": "config"})
-        valid, msg = self.valid_emoji(emote, config)
-        if not valid:
-            return await ctx.send(msg)
-        
-        whitelist = config[emote].get("whitelist", [])
-        
-        for role in roles:
-            if role.id in whitelist:
-                whitelist.remove(role.id)
-        
+    async def whitelist(self, ctx):
+        """Set a message ID or message link whitelist for reactions."""
+        await ctx.send_help(ctx.command)
 
-        config[emote]["whitelist"] = whitelist
+    @whitelist.command(name="add")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def whitelist_add(self, ctx, message: discord.Message):
+        """Add a message to the whitelist for reactions."""
+        whitelist = await self.db.find_one({"_id": "whitelist"})
+        if not whitelist:
+            whitelist = {"_id": "whitelist", "messages": []}
+
+        if message.id not in whitelist["messages"]:
+            whitelist["messages"].append(message.id)
+            await self.db.find_one_and_update(
+                {"_id": "whitelist"}, {"$set": {"messages": whitelist["messages"]}}, upsert=True
+            )
+            await ctx.send(f"Added message with ID {message.id} to the whitelist.")
+        else:
+            await ctx.send("This message is already in the whitelist.")
+
+    @whitelist.command(name="remove")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def whitelist_remove(self, ctx, message: discord.Message):
+        """Remove a message from the whitelist for reactions."""
+        whitelist = await self.db.find_one({"_id": "whitelist"})
+        if not whitelist or message.id not in whitelist.get("messages", []):
+            await ctx.send("This message is not in the whitelist.")
+            return
+
+        whitelist["messages"].remove(message.id)
         await self.db.find_one_and_update(
-            {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
-        whitelist_mentions = [f"<@&{role_id}>" for role_id in whitelist]
-        
-        embed = discord.Embed(title="Successfully removed roles from the whitelist.", color=discord.Color.green())
+            {"_id": "whitelist"}, {"$set": {"messages": whitelist["messages"]}}, upsert=True
+        )
+        await ctx.send(f"Removed message with ID {message.id} from the whitelist.")
+
+    # Modify the on_raw_reaction_add listener to check if the message is in the whitelist
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        if not payload.guild_id:
+            return
+
+        config = await self.db.find_one({"_id": "config"})
+
+        emote = payload.emoji.name if payload.emoji.id is None else str(payload.emoji.id)
+        emoji = payload.emoji.name if payload.emoji.id is None else payload.emoji
+
+        guild = self.bot.get_guild(payload.guild_id)
+        member = discord.utils.get(guild.members, id=payload.user_id)
+
+        if member.bot:
+            return
+
         try:
             embed.add_field(name=f"Current whitelist for {emoji}", value=" ".join(whitelist_mentions))
         except HTTPException:
@@ -310,12 +374,7 @@ class rr(commands.Cog):
         Make a reaction role through interactive setup
         Note: You can only use the emoji once, you can't use the emoji multiple times.
         """
-        roles = ctx.guild.roles
-        view = ReactionRoleSetupView(ctx, roles)
-        await ctx.send(
-            "Use the buttons and dropdowns below to configure your reaction role setup:",
-            view=view,
-        )        
+
         # checks 
         def check(msg):
             return ctx.author == msg.author and ctx.channel == msg.channel
