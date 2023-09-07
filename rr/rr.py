@@ -541,11 +541,11 @@ class rr(commands.Cog):
                     
         whitelist = config[emote].get("whitelist", [])
 
-                rrole = config[emote]["role"]
-                role = discord.utils.get(guild.roles, id=int(rrole))
+        rrole = config[emote]["role"]
+        role = discord.utils.get(guild.roles, id=int(rrole))
 
-                if role:
-                    await member.add_roles(role)
+        if role:
+            await member.add_roles(role)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
