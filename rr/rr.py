@@ -128,85 +128,86 @@ class rr(commands.Cog):
         {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
         await ctx.send("Succesfully unlocked the reaction role.")
             
-#     @reactionrole.command(name="make")
-#     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-#     async def rr_make(self, ctx):
-#         """
-#         Make a reaction role through interactive setup
-#         Note: You can only use the emoji once, you can't use the emoji multiple times.
-#         """
+    async def rr_make(self, ctx):
+        """
+        Make a reaction role through interactive setup
+        Note: You can only use the emoji once, you can't use the emoji multiple times.
+        """
 
-#         # checks 
-#         def check(msg):
-#             return ctx.author == msg.author and ctx.channel == msg.channel
+        # checks 
+        def check(msg):
+            return ctx.author == msg.author and ctx.channel == msg.channel
 
-#         def channel_check(msg):
-#             return check(msg) and len(msg.channel_mentions) != 0
+        def channel_check(msg):
+            return check(msg) and len(msg.channel_mentions) != 0
 
-#         def emoji_and_role_check(msg):
-#             return check(msg) and (discord.utils.get(ctx.guild.roles, name=msg.content.strip()[1:].strip()) is not None and 
+        def emoji_and_role_check(msg):
+            return check(msg) and (discord.utils.get(ctx.guild.roles, name=msg.content.strip()[1:].strip()) is not None)
         
-#         # getting the values (inputs) from the user
-#         await ctx.send("Alright! In which channel would you like the announcement to be sent? (Make sure to mention the channel)")
-#         try:
-#             channel_msg = await self.bot.wait_for("message", check=channel_check, timeout=30.0)
-#             channel = channel_msg.channel_mentions[0]
-#         except asyncio.TimeoutError:
-#             return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
-#         await ctx.send(f"Ok, so the channel is {channel.mention}. what do you want the message to be? Use | to seperate the title "
-#                         "from the description\n **Example:** `This is my title. | This is my description!`")
-#         try:
-#             title_and_description = await self.bot.wait_for("message", check=check, timeout=120.0)
-#             title = ("".join(title_and_description.split("|", 1)[0])).strip()
-#             description = ("".join(title_and_description.split("|", 1)[1])).strip()
-#         except asyncio.TimeoutError:
-#             return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
-                
-#         await ctx.send("Sweet! Would you like the message to have a color? respond with a hex code if you'd like to or if you don't "
-#                        f"Type `{ctx.prefix}none`\nConfused what a hex code is? Check out https://htmlcolorcodes.com/color-picker/")
-#         # getting a valid hex
-#         valid_hex = False                      
-#         while not valid_hex:
-#             try:
-#                 hex_code = await self.bot.wait_for("message", check=check, timeout=60.0)
-#                 if hex_code.content.lower() == "none" or hex_code.content.lower() == f"{ctx.prefix}none":
-#                     color = self.bot.main_color
-#                     break
-#                 valid_hex = re.search(r"^#(?:[0-9a-fA-F]{3}){1,2}$", hex_code.content)
-#             except asyncio.TimeoutError:
-#                 return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
-#             if not valid_hex:
-#                 embed = discord.Embed(description="""This doesn't seem like a valid Hex Code!
-#                                                    Please enter a **valid** [hex code](https://htmlcolorcodes.com/color-picker)""")
-#                 await ctx.send(embed=embed)
-#             else:
-#                 color = hex_code.content.replace("#", "0x")
-
-#         # forming the embed and sending it to the user
-#         embed = discord.Embed(title=title, description=description, timestamp=datetime.datetime.utcnow(), color=color)
-#         await ctx.send("Great! the embed should now look like this:", embed=embed)
+        # getting the values (inputs) from the user
+        await ctx.send("Alright! In which channel would you like the announcement to be sent? (Make sure to mention the channel)")
+        try:
+            channel_msg = await self.bot.wait_for("message", check=channel_check, timeout=30.0)
+            channel = channel_msg.channel_mentions[0]
+        except asyncio.TimeoutError:
+            return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
         
+        # Get the title and description from the user
+        await ctx.send(f"Ok, so the channel is {channel.mention}. What do you want the message to be? Use | to separate the title "
+                       "from the description\n **Example:** `This is my title. | This is my description!`")
+        try:
+            title_and_description = await self.bot.wait_for("message", check=check, timeout=120.0)
+            title, description = map(str.strip, title_and_description.content.split("|", 1))
+        except asyncio.TimeoutError:
+            return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
 
-#         await ctx.send("The last step we need to do is picking the roles, The format for adding roles is the emoji then the name of "
-#                        f"the role, When you're done type `{ctx.prefix}done`\n**Example:** `🎉 Giveaways`")
-#         emojis = []
-#         roles = []
+        # Get the color from the user
+        await ctx.send("Sweet! Would you like the message to have a color? Respond with a hex code if you'd like to, or if you don't, "
+                       f"type `{ctx.prefix}none`\nConfused about what a hex code is? Check out https://htmlcolorcodes.com/color-picker/")
+        
+        valid_hex = False
+        while not valid_hex:
+            try:
+                hex_code = await self.bot.wait_for("message", check=check, timeout=60.0)
+                if hex_code.content.lower() == "none" or hex_code.content.lower() == f"{ctx.prefix}none":
+                    color = self.bot.main_color
+                    break
+                valid_hex = re.search(r"^#(?:[0-9a-fA-F]{3}){1,2}$", hex_code.content)
+            except asyncio.TimeoutError:
+                return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
+            if not valid_hex:
+                embed = discord.Embed(description="""This doesn't seem like a valid Hex Code!
+                                                   Please enter a **valid** [hex code](https://htmlcolorcodes.com/color-picker)""")
+                await ctx.send(embed=embed)
+            else:
+                color = hex_code.content.replace("#", "0x")
 
-#         while True:
-#             try:
-#                 emoji_and_role = await self.bot.wait_for("message", check=emoji_and_role_check, timeout=60.0)
-#             except asyncio.TimeoutError:
-#                 return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
-#             else:
-#                 if emoji_and_role.content.lower() == "done" or emoji_and_role.content.lower() == f"{ctx.prefix}done":
-#                     if len(roles) == 0:
-#                         await ctx.send("You need to at least specify 1 role for the reaction role")
-#                     else:
-#                        break
-#                 else:
-#                     emoji = emoji_and_role.content[0]
-#                     role = emoji_and_role.content[1:].strip()
-#                     if ...
+        # Create and send the embed
+        embed = discord.Embed(title=title, description=description, color=color)
+        await ctx.send("Great! The embed should now look like this:", embed=embed)
+
+        # Get roles from the user
+        await ctx.send("The last step we need to do is picking the roles. The format for adding roles is the emoji then the name of "
+                       f"the role. When you're done, type `{ctx.prefix}done`\n**Example:** `🎉 Giveaways`")
+        emojis = []
+        roles = []
+
+        while True:
+            try:
+                emoji_and_role = await self.bot.wait_for("message", check=emoji_and_role_check, timeout=60.0)
+            except asyncio.TimeoutError:
+                return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
+            else:
+                if emoji_and_role.content.lower() == "done" or emoji_and_role.content.lower() == f"{ctx.prefix}done":
+                    if len(roles) == 0:
+                        await ctx.send("You need to specify at least 1 role for the reaction role.")
+                    else:
+                        break
+                else:
+                    emoji = emoji_and_role.content[0]
+                    role = emoji_and_role.content[1:].strip()
+                    emojis.append(emoji)
+                    roles.append(role)
                   
 
     @reactionrole.group(name="blacklist", aliases=["ignorerole"], invoke_without_command=True)
