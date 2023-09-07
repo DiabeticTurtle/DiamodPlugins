@@ -311,7 +311,14 @@ class reactionrole(commands.Cog):
         role = discord.utils.get(guild.roles, id=int(rrole))
 
         if role:
-            await member.add_roles(role)
+            # Check if the member has any role in the whitelist
+            whitelist_roles = config[emote].get("whitelist_roles", [])  # Get the whitelist roles for this emoji
+            has_whitelist_role = any(role.id in whitelist_roles for role in member.roles)
+
+            if has_whitelist_role:
+                await member.add_roles(role)
+            else:
+                await self._remove_reaction(payload, emoji, member)
 
 
 
