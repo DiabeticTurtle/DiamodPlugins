@@ -285,7 +285,7 @@ class reactionrole(commands.Cog):
 
 
 
-    @reactionrole.command(name="whitelist add")
+    @reactionrole.command(name="whitelista")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def whitelist_add(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
         """Allow certain roles to react on a reaction role."""
@@ -311,7 +311,7 @@ class reactionrole(commands.Cog):
             pass
         await ctx.send(embed=embed)
 
-    @reactionrole.command(name="whitelist remove")
+    @reactionrole.command(name="whitelistr")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def whitelist_remove(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
         """Remove certain roles from the whitelist."""
