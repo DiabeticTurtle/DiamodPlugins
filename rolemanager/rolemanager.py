@@ -975,6 +975,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
         channel: Optional[discord.TextChannel] = None,
         *,
         title: str = None,
+        allowed_roles: commands.Greedy[discord.Role] = None,
     ):
         """
         Create a new reaction roles menu.
@@ -994,6 +995,7 @@ class RoleManager(commands.Cog, name=__plugin_name__):
             {"key": "done", "description": done_session},
         ]
         reactrole = self.reactrole_manager.create_new()
+        reactrole.allowed_roles = [role.id for role in allowed_roles] if allowed_roles else []
         view = ReactionRoleCreationPanel(ctx, reactrole, input_sessions=input_sessions)
         if title is None:
             title = "Reaction Roles"
@@ -1266,6 +1268,18 @@ class RoleManager(commands.Cog, name=__plugin_name__):
             output = [
                 f"[Reaction Role #{index}]({message.jump_url}) - `{trigger_type.value}`, `{rules.value}`"
             ]
+
+            allowed_roles = entry.allowed_roles if hasattr(entry, 'allowed_roles') else []
+            allowed_roles_str = ', '.join([role.name for role in allowed_roles])
+            if allowed_roles_str:
+                output.append(f"Allowed Roles: {allowed_roles_str}")
+
+
+            allowed_roles = entry.allowed_roles if hasattr(entry, 'allowed_roles') else []
+            allowed_roles_str = ', '.join([role.name for role in allowed_roles])
+            if allowed_roles_str:
+                output.append(f"Allowed Roles: {allowed_roles_str}")
+
             for bind in entry.binds:
                 emoji = bind.emoji or getattr(bind.button, "emoji", None)
                 if trigger_type == TriggerType.INTERACTION:
