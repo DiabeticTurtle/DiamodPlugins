@@ -31,7 +31,7 @@ class rr(commands.Cog):
         """Assign roles to your members with Reactions"""
         await ctx.send_help(ctx.command)
         
-    @reactionrole.command(name="add", aliases=["make"])
+    @reactionrole.command(name="add", aliases=["create"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def rr_add(self, ctx, message: str, role: discord.Role, emoji: Emoji,
                      ignored_roles: commands.Greedy[discord.Role] = None):
@@ -128,85 +128,55 @@ class rr(commands.Cog):
         {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
         await ctx.send("Succesfully unlocked the reaction role.")
             
-#     @reactionrole.command(name="make")
-#     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-#     async def rr_make(self, ctx):
-#         """
-#         Make a reaction role through interactive setup
-#         Note: You can only use the emoji once, you can't use the emoji multiple times.
-#         """
+    @reactionrole.command(name="make")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def rr_make(self, ctx):
+        """Make a reaction role through interactive setup."""
+    
+        def check(msg):
+            return ctx.author == msg.author and ctx.channel == msg.channel
 
-#         # checks 
-#         def check(msg):
-#             return ctx.author == msg.author and ctx.channel == msg.channel
-
-#         def channel_check(msg):
-#             return check(msg) and len(msg.channel_mentions) != 0
-
-#         def emoji_and_role_check(msg):
-#             return check(msg) and (discord.utils.get(ctx.guild.roles, name=msg.content.strip()[1:].strip()) is not None and 
+        await ctx.send("Alright! In which channel would you like the announcement to be sent? (Make sure to mention the channel)")
+    
+        try:
+            channel_msg = await self.bot.wait_for("message", check=check, timeout=30.0)
+            channel = channel_msg.channel_mentions[0]
+        except asyncio.TimeoutError:
+            return await ctx.send("Too late! The reaction role setup is canceled.", delete_after=10.0)
+    
+        await ctx.send("Ok, now what message would you like to use for the reaction role?")
+    
+        try:
+            message_content = await self.bot.wait_for("message", check=check, timeout=120.0)
+        except asyncio.TimeoutError:
+            return await ctx.send("Too late! The reaction role setup is canceled.", delete_after=10.0)
+    
+        # Create the message and add it to the specified channel
+        message = await channel.send(message_content.content)
+    
+        await ctx.send("Great! Now, let's set up the reaction roles on this message.")
+        await ctx.send("Please mention the roles you want to associate with emojis in the format: `<@&RoleName>` followed by the emoji.")
+        await ctx.send("For example: `@RoleName1 :emoji1: @RoleName2 :emoji2:`")
+    
+        try:
+            roles_msg = await self.bot.wait_for("message", check=check, timeout=300.0)
+        except asyncio.TimeoutError:
+            return await ctx.send("Too late! The reaction role setup is canceled.", delete_after=10.0)
+    
+        roles_and_emojis = re.findall(r'<@&(\d+)> :([^:\s]+):', roles_msg.content)
+    
+        if not roles_and_emojis:
+            return await ctx.send("No valid roles and emojis were found. The reaction role setup is canceled.")
+    
+        for role_id, emoji_name in roles_and_emojis:
+            role = discord.utils.get(ctx.guild.roles, id=int(role_id))
+            emoji = await UnicodeEmoji().convert(ctx, emoji_name)
         
-#         # getting the values (inputs) from the user
-#         await ctx.send("Alright! In which channel would you like the announcement to be sent? (Make sure to mention the channel)")
-#         try:
-#             channel_msg = await self.bot.wait_for("message", check=channel_check, timeout=30.0)
-#             channel = channel_msg.channel_mentions[0]
-#         except asyncio.TimeoutError:
-#             return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
-#         await ctx.send(f"Ok, so the channel is {channel.mention}. what do you want the message to be? Use | to seperate the title "
-#                         "from the description\n **Example:** `This is my title. | This is my description!`")
-#         try:
-#             title_and_description = await self.bot.wait_for("message", check=check, timeout=120.0)
-#             title = ("".join(title_and_description.split("|", 1)[0])).strip()
-#             description = ("".join(title_and_description.split("|", 1)[1])).strip()
-#         except asyncio.TimeoutError:
-#             return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
-                
-#         await ctx.send("Sweet! Would you like the message to have a color? respond with a hex code if you'd like to or if you don't "
-#                        f"Type `{ctx.prefix}none`\nConfused what a hex code is? Check out https://htmlcolorcodes.com/color-picker/")
-#         # getting a valid hex
-#         valid_hex = False                      
-#         while not valid_hex:
-#             try:
-#                 hex_code = await self.bot.wait_for("message", check=check, timeout=60.0)
-#                 if hex_code.content.lower() == "none" or hex_code.content.lower() == f"{ctx.prefix}none":
-#                     color = self.bot.main_color
-#                     break
-#                 valid_hex = re.search(r"^#(?:[0-9a-fA-F]{3}){1,2}$", hex_code.content)
-#             except asyncio.TimeoutError:
-#                 return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
-#             if not valid_hex:
-#                 embed = discord.Embed(description="""This doesn't seem like a valid Hex Code!
-#                                                    Please enter a **valid** [hex code](https://htmlcolorcodes.com/color-picker)""")
-#                 await ctx.send(embed=embed)
-#             else:
-#                 color = hex_code.content.replace("#", "0x")
+            if role and emoji:
+                await self.rr_add(ctx, f"message/{message.id}", role, emoji)
+    
+        await ctx.send("Reaction roles have been set up on the message successfully!")
 
-#         # forming the embed and sending it to the user
-#         embed = discord.Embed(title=title, description=description, timestamp=datetime.datetime.utcnow(), color=color)
-#         await ctx.send("Great! the embed should now look like this:", embed=embed)
-        
-
-#         await ctx.send("The last step we need to do is picking the roles, The format for adding roles is the emoji then the name of "
-#                        f"the role, When you're done type `{ctx.prefix}done`\n**Example:** `🎉 Giveaways`")
-#         emojis = []
-#         roles = []
-
-#         while True:
-#             try:
-#                 emoji_and_role = await self.bot.wait_for("message", check=emoji_and_role_check, timeout=60.0)
-#             except asyncio.TimeoutError:
-#                 return await ctx.send("Too late! The reaction role is canceled.", delete_after=10.0)
-#             else:
-#                 if emoji_and_role.content.lower() == "done" or emoji_and_role.content.lower() == f"{ctx.prefix}done":
-#                     if len(roles) == 0:
-#                         await ctx.send("You need to at least specify 1 role for the reaction role")
-#                     else:
-#                        break
-#                 else:
-#                     emoji = emoji_and_role.content[0]
-#                     role = emoji_and_role.content[1:].strip()
-#                     if ...
                   
 
     @reactionrole.group(name="blacklist", aliases=["ignorerole"], invoke_without_command=True)
@@ -312,6 +282,66 @@ class rr(commands.Cog):
 
         if role:
             await member.add_roles(role)
+
+@reactionrole.group(name="whitelist", aliases=["allowrole"], invoke_without_command=True)
+@checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+async def whitelist(self, ctx):
+    """Allow certain roles to react on a reaction role."""
+    await ctx.send_help(ctx.command)
+
+@whitelist.command(name="add")
+@checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+async def whitelist_add(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
+    """Allow certain roles to react on a reaction role."""
+    emote = emoji.name if emoji.id is None else str(emoji.id)
+    config = await self.db.find_one({"_id": "config"})
+    valid, msg = self.valid_emoji(emote, config)
+    if not valid:
+        return await ctx.send(msg)
+
+    whitelist_roles = config[emote].get("whitelist_roles") or []
+    new_whitelist = [role.id for role in roles if role.id not in whitelist_roles]
+    whitelist = whitelist_roles + new_whitelist
+    config[emote]["whitelist_roles"] = whitelist
+    await self.db.find_one_and_update(
+        {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
+
+    whitelisted_roles = [f"<@&{role}>" for role in whitelist]
+
+    embed = discord.Embed(title="Successfully whitelisted the roles.", color=discord.Color.green())
+    try:
+        embed.add_field(name=f"Current whitelisted roles for {emoji}", value=" ".join(whitelisted_roles))
+    except HTTPException:
+        pass
+    await ctx.send(embed=embed)
+
+@whitelist.command(name="remove")
+@checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+async def whitelist_remove(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
+    """Remove certain roles from the whitelist."""
+    emote = emoji.name if emoji.id is None else str(emoji.id)
+    config = await self.db.find_one({"_id": "config"})
+    valid, msg = self.valid_emoji(emote, config)
+    if not valid:
+        return await ctx.send(msg)
+
+    whitelist_roles = config[emote].get("whitelist_roles") or []
+    whitelist = whitelist_roles.copy()
+
+    [whitelist.remove(role.id) for role in roles if role.id in whitelist_roles]
+    config[emote]["whitelist_roles"] = whitelist
+
+    await self.db.find_one_and_update(
+        {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
+
+    whitelisted_roles = [f"<@&{role}>" for role in whitelist]
+
+    embed = discord.Embed(title="Successfully removed roles from the whitelist.", color=discord.Color.green())
+    try:
+        embed.add_field(name=f"Current whitelisted roles for {emoji}", value=" ".join(whitelisted_roles))
+    except:
+        pass
+    await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
