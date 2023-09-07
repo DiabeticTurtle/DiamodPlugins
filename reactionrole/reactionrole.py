@@ -283,7 +283,7 @@ class reactionrole(commands.Cog):
         if role:
             await member.add_roles(role)
 
-@reactionrole.group(name="whitelist", aliases=["allowrole"], invoke_without_command=True)
+@commands.group(name="whitelist", aliases=["allowrole"], invoke_without_command=True)
 @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
 async def whitelist(self, ctx):
     """Allow certain roles to react on a reaction role."""
