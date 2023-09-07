@@ -348,5 +348,5 @@ class rr(commands.Cog):
         except (KeyError, TypeError):
             return False, "There's no reaction role set with this emoji!"
                 
-async def setup(bot: ModmailBot) -> None:
+async def setup(bot):
     await bot.add_cog(rr(bot))
