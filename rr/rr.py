@@ -18,7 +18,7 @@ class UnicodeEmoji(commands.Converter):
 
 Emoji = typing.Union[discord.PartialEmoji, discord.Emoji, UnicodeEmoji]
 
-class rr(commands.Cog):
+class reactionrole(commands.Cog):
     """Assign roles to your members with Reactions"""
 
     def __init__(self, bot):
@@ -379,4 +379,4 @@ async def whitelist_remove(self, ctx, emoji: Emoji, roles: commands.Greedy[disco
             return False, "There's no reaction role set with this emoji!"
                 
 async def setup(bot):
-   await bot.add_cog(rr(bot))
+   await bot.add_cog(reactionrole(bot))
