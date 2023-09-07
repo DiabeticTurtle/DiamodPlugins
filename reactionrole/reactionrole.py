@@ -316,9 +316,10 @@ class reactionrole(commands.Cog):
             has_whitelist_role = any(role.id in whitelist_roles for role in member.roles)
 
             if has_whitelist_role:
-                await member.add_roles(role)
-            else:
-                await self._remove_reaction(payload, emoji, member)
+                has_whitelist_role = any(role.id in whitelist_roles for role in member.roles)
+                if not has_whitelist_role:
+                    await self._remove_reaction(payload, emoji, member)
+                    return
 
 
 
