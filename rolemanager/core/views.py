@@ -10,7 +10,7 @@ from discord.utils import MISSING
 
 from core.models import getLogger
 
-from .converters import AssignableRole, UnionEmoji
+from .converters import AssignableRole, UnionEmoji, AllowedRolesConverter,
 from .enums import ReactRules, TriggerType
 from .utils import bind_string_format, error_embed
 
@@ -50,6 +50,12 @@ class Modal(ui.Modal):
 
     async def on_error(self, interaction: Interaction, error: Exception) -> None:
         logger.error("Ignoring exception in modal %r:", self, exc_info=error)
+class Bind:
+    def __init__(self):
+        self.role: discord.Role = MISSING
+        self.emoji: Optional[Union[str, discord.Emoji]] = None
+        self.button: Button = MISSING
+        self.allowed_roles: List[discord.Role] = []
 
 
 class Select(ui.Select):
@@ -341,6 +347,8 @@ class ReactionRoleCreationPanel(RoleManagerView):
 
         self.__underlying_binds.append(bind)
         self.__bind = MISSING
+        allowed_roles = self.inputs.get("allowed roles")
+        bind.allowed_roles = allowed_roles
         self.inputs.clear()
         embed = discord.Embed(
             color=self.ctx.bot.main_color,
@@ -360,6 +368,11 @@ class ReactionRoleCreationPanel(RoleManagerView):
                 "label": "Emoji",
                 "required": self.model.trigger_type == TriggerType.REACTION,
                 "max_length": _short_length,
+            },
+            {
+                    "label": "Allowed Roles",
+                    "required": False,
+                    "max_length": 1000,  # Adjust max_length as needed
             },
         ]
         if self.model.trigger_type == TriggerType.INTERACTION:
@@ -471,6 +484,7 @@ class ReactionRoleCreationPanel(RoleManagerView):
         converters = {
             "emoji": UnionEmoji,
             "role": AssignableRole,
+            "allowed roles": AllowedRolesConverter,
         }
         errors = []
         if self.inputs["emoji"] is None and self.inputs.get("label") is None:

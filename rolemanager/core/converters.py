@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import re
-from typing import Union, TYPE_CHECKING
+from typing import List, Union, TYPE_CHECKING
 
 import discord
 from dateutil.parser import parse as parse_datetime
@@ -20,11 +20,31 @@ __all__ = [
     "Args",
     "AssignableRole",
     "ObjectConverter",
+    "AllowedRoles",
     "UnionEmoji",
     "PERMS",
 ]
 
+class AllowedRolesConverter(commands.Converter):
+    async def convert(self, ctx: commands.Context, argument: str) -> List[discord.Role]:
+        role_names = argument.split()
 
+        allowed_roles = []
+
+        
+        for role_name in role_names:
+            
+            role = discord.utils.get(ctx.guild.roles, name=role_name)
+
+            
+            if role:
+                allowed_roles.append(role)
+            else:
+                raise commands.BadArgument(f'Role "{role_name}" not found in this server.')
+
+        # Return the list of allowed roles
+        return allowed_roles
+    
 class _AssignableRoleConverter(commands.RoleConverter):
     async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
         try:
