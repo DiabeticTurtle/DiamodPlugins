@@ -378,6 +378,7 @@ class reactionrole(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
+        print(f"Raw Reaction Added: {payload.emoji.name} by {payload.user_id} in #{payload.channel_id}")
         if payload.guild_id is None:
             return
         
