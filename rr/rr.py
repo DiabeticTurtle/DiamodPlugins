@@ -571,23 +571,22 @@ class rr(commands.Cog):
         embed = discord.Embed(title="Successfully removed roles from the whitelist!")
         embed.add_field(name="Roles Removed:", value=", ".join(whitelist_mentions), inline=False)
         await ctx.send(embed=embed)
+    async def handle_reaction_remove(self, config, emote, payload):
+        if payload.event_type == "REACTION_REMOVE":
+            guild = self.bot.get_guild(payload.guild_id)
+            rrole = config[emote]["role"]
+            role = discord.utils.get(guild.roles, id=int(rrole))
 
-    def valid_emoji(self, emote, config):
+            if role:
+                member = discord.utils.get(guild.members, id=payload.user_id)
+                await member.remove_roles(role)
+
+    def valid_emoji(self, emote, config): # type: ignore
         if not config:
             return False, "No reaction roles found in the config."
         if emote not in config:
             return False, "This emoji is not set up as a reaction role."
         return True, ""
-        if msg_id and payload.message_id == int(msg_id):
-            # Handle emoji reactions
-            if payload.event_type == "REACTION_REMOVE":
-                guild = self.bot.get_guild(payload.guild_id)
-                rrole = config[emote]["role"]
-                role = discord.utils.get(guild.roles, id=int(rrole))
-
-                if role:
-                    member = discord.utils.get(guild.members, id=payload.user_id)
-                    await member.remove_roles(role)
                 
     async def _remove_reaction(self, payload, emoji, member):
         channel = self.bot.get_channel(payload.channel_id)
