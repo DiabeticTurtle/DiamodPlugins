@@ -21,16 +21,6 @@ class ReactionRoleView(discord.ui.View):
         super().__init__(timeout=None)
         self.ctx = ctx
         self.roles = roles
-        self.add_item(discord.ui.Button(label="Add Role", custom_id="add_role"))
-
-    async def cancel_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        # Handle cancel button click
-        await interaction.response.send_message("Reaction role setup canceled.", ephemeral=True)
-
-    async def on_button_click(self, button: discord.ui.Button, interaction: discord.Interaction):
-        if button.custom_id == "add_role":
-            # Handle adding a role here
-            await interaction.response.send_message("Add a role")        
 
 class rr(commands.Cog):
     """Assign roles to your members with Reactions"""
