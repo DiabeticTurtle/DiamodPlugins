@@ -77,7 +77,31 @@ class reactionrole(commands.Cog):
         
         await message.add_reaction(emoji)
         await ctx.send("Successfuly set the Reaction Role!")
+    @reactionrole.command(name="list")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def rr_list(self, ctx):
+        """List all reaction roles with their attributes."""
+        config = await self.db.find_one({"_id": "config"})
+    
+        if not config:
+            return await ctx.send("No reaction roles are configured.")
+    
+        embed = discord.Embed(title="List of Reaction Roles", color=discord.Color.blue())
+    
+        for emote, data in config.items():
+            role = ctx.guild.get_role(data["role"])
         
+            if not role:
+                continue
+        
+            whitelist = data.get("whitelist_roles", [])
+            ignored = data.get("ignored_roles", [])
+        
+            description = f"Role: {role.mention}\nWhitelisted Roles: {', '.join([ctx.guild.get_role(r).mention for r in whitelist])}\nIgnored Roles: {', '.join([ctx.guild.get_role(r).mention for r in ignored])}"
+        
+            embed.add_field(name=f"Reaction: {emote}", value=description, inline=False)
+    
+        await ctx.send(embed=embed)    
     @reactionrole.command(name="remove", aliases=["delete"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def rr_remove(self, ctx, emoji: Emoji):
