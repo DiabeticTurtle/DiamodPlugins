@@ -283,65 +283,61 @@ class reactionrole(commands.Cog):
         if role:
             await member.add_roles(role)
 
-@commands.group(name="whitelist", aliases=["allowrole"], invoke_without_command=True)
-@checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-async def whitelist(self, ctx):
-    """Allow certain roles to react on a reaction role."""
-    await ctx.send_help(ctx.command)
 
-@whitelist.command(name="add")
-@checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-async def whitelist_add(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
-    """Allow certain roles to react on a reaction role."""
-    emote = emoji.name if emoji.id is None else str(emoji.id)
-    config = await self.db.find_one({"_id": "config"})
-    valid, msg = self.valid_emoji(emote, config)
-    if not valid:
-        return await ctx.send(msg)
 
-    whitelist_roles = config[emote].get("whitelist_roles") or []
-    new_whitelist = [role.id for role in roles if role.id not in whitelist_roles]
-    whitelist = whitelist_roles + new_whitelist
-    config[emote]["whitelist_roles"] = whitelist
-    await self.db.find_one_and_update(
-        {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
+    @reactionrole.command(name="whitelist add")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def whitelist_add(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
+        """Allow certain roles to react on a reaction role."""
+        emote = emoji.name if emoji.id is None else str(emoji.id)
+        config = await self.db.find_one({"_id": "config"})
+        valid, msg = self.valid_emoji(emote, config)
+        if not valid:
+            return await ctx.send(msg)
 
-    whitelisted_roles = [f"<@&{role}>" for role in whitelist]
+        whitelist_roles = config[emote].get("whitelist_roles") or []
+        new_whitelist = [role.id for role in roles if role.id not in whitelist_roles]
+        whitelist = whitelist_roles + new_whitelist
+        config[emote]["whitelist_roles"] = whitelist
+        await self.db.find_one_and_update(
+            {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
 
-    embed = discord.Embed(title="Successfully whitelisted the roles.", color=discord.Color.green())
-    try:
-        embed.add_field(name=f"Current whitelisted roles for {emoji}", value=" ".join(whitelisted_roles))
-    except HTTPException:
-        pass
-    await ctx.send(embed=embed)
+        whitelisted_roles = [f"<@&{role}>" for role in whitelist]
 
-@whitelist.command(name="remove")
-@checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-async def whitelist_remove(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
-    """Remove certain roles from the whitelist."""
-    emote = emoji.name if emoji.id is None else str(emoji.id)
-    config = await self.db.find_one({"_id": "config"})
-    valid, msg = self.valid_emoji(emote, config)
-    if not valid:
-        return await ctx.send(msg)
+        embed = discord.Embed(title="Successfully whitelisted the roles.", color=discord.Color.green())
+        try:
+            embed.add_field(name=f"Current whitelisted roles for {emoji}", value=" ".join(whitelisted_roles))
+        except HTTPException:
+            pass
+        await ctx.send(embed=embed)
 
-    whitelist_roles = config[emote].get("whitelist_roles") or []
-    whitelist = whitelist_roles.copy()
+    @reactionrole.command(name="whitelist remove")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def whitelist_remove(self, ctx, emoji: Emoji, roles: commands.Greedy[discord.Role]):
+        """Remove certain roles from the whitelist."""
+        emote = emoji.name if emoji.id is None else str(emoji.id)
+        config = await self.db.find_one({"_id": "config"})
+        valid, msg = self.valid_emoji(emote, config)
+        if not valid:
+            return await ctx.send(msg)
 
-    [whitelist.remove(role.id) for role in roles if role.id in whitelist_roles]
-    config[emote]["whitelist_roles"] = whitelist
+        whitelist_roles = config[emote].get("whitelist_roles") or []
+        whitelist = whitelist_roles.copy()
 
-    await self.db.find_one_and_update(
-        {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
+        [whitelist.remove(role.id) for role in roles if role.id in whitelist_roles]
+        config[emote]["whitelist_roles"] = whitelist
 
-    whitelisted_roles = [f"<@&{role}>" for role in whitelist]
+        await self.db.find_one_and_update(
+            {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
 
-    embed = discord.Embed(title="Successfully removed roles from the whitelist.", color=discord.Color.green())
-    try:
-        embed.add_field(name=f"Current whitelisted roles for {emoji}", value=" ".join(whitelisted_roles))
-    except:
-        pass
-    await ctx.send(embed=embed)
+        whitelisted_roles = [f"<@&{role}>" for role in whitelist]
+
+        embed = discord.Embed(title="Successfully removed roles from the whitelist.", color=discord.Color.green())
+        try:
+            embed.add_field(name=f"Current whitelisted roles for {emoji}", value=" ".join(whitelisted_roles))
+        except:
+            pass
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
