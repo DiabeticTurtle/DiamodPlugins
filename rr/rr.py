@@ -376,7 +376,9 @@ class rr(commands.Cog):
         await self.db.find_one_and_update(
         {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
         await ctx.send("Succesfully unlocked the reaction role.")
-            
+        
+    @reactionrole.command(name="make", aliases=["menu"])
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)        
     async def rr_make(self, ctx):
         """
         Make a reaction role through interactive setup
