@@ -34,7 +34,7 @@ class reactionrole(commands.Cog):
     @reactionrole.command(name="add", aliases=["create"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def rr_add(self, ctx, message: str, role: discord.Role, emoji: Emoji,
-                     ignored_roles: commands.Greedy[discord.Role] = None):
+                     ignored_roles: commands.Greedy[discord.Role] = None, whitelist_roles: commands.Greedy[discord.Role] = None):
         """
         Sets up the reaction role.
         - Note(s):
@@ -64,9 +64,15 @@ class reactionrole(commands.Cog):
             blacklist = [role.id for role in ignored_roles]
         else:
             blacklist = []
+
+        if whitelist_roles:
+            whitelist = [role.id for role in whitelist_roles]
+        else:
+            whitelist = []
+
             
         await self.db.find_one_and_update(
-            {"_id": "config"}, {"$set": {emote: {"role": role.id, "msg_id": message.id, "ignored_roles": blacklist, "state": "unlocked"}}},
+            {"_id": "config"}, {"$set": {emote: {"role": role.id, "msg_id": message.id, "ignored_roles": blacklist, "whitelist_roles": whitelist, "state": "unlocked"}}},
             upsert=True)
         
         await message.add_reaction(emoji)
