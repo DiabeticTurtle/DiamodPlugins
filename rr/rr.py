@@ -276,6 +276,42 @@ class rr(commands.Cog):
         embed = discord.Embed(title="Successfully added roles to the whitelist!")
         embed.add_field(name="Roles Added:", value=", ".join(whitelist_mentions), inline=False)
         await ctx.send(embed=embed)
+    @rr_whitelist.command(name="add")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def whitelist_add(self, ctx, emoji: Emoji, role: discord.Role):
+        """
+        Add a role to the whitelist for a reaction role.
+    
+        Parameters:
+            - emoji: The emoji associated with the reaction role.
+            - role: The role to add to the whitelist.
+        """
+        emote = emoji.name if emoji.id is None else str(emoji.id)
+        config = await self.db.find_one({"_id": "config"})
+    
+        valid, msg = self.valid_emoji(emote, config)
+        if not valid:
+            return await ctx.send(msg)
+    
+        whitelist = config[emote].get("whitelist", [])
+    
+        if role.id in whitelist:
+            return await ctx.send(f"{role.name} is already in the whitelist for this reaction role.")
+    
+        whitelist.append(role.id)
+        config[emote]["whitelist"] = whitelist
+    
+        await self.db.find_one_and_update(
+            {"_id": "config"}, {"$set": {emote: config[emote]}}, upsert=True)
+    
+        await ctx.send(f"{role.name} has been added to the whitelist for this reaction role.")
+    
+    @rr.group(name="whitelist", aliases=["rw"])
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def rr_whitelist(self, ctx):
+        """Manage the whitelist for reaction roles."""
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(ctx.command)
 
     @rr_whitelist.command(name="remove")
     @commands.has_permissions(administrator=True)
@@ -410,7 +446,7 @@ class rr(commands.Cog):
                 member = discord.utils.get(guild.members, id=payload.user_id)
                 await member.remove_roles(role)
 
-    def valid_emoji(self, emote, config): # type: ignore
+    def valid_emoji(self, emote, config):
         if not config:
             return False, "No reaction roles found in the config."
         if emote not in config:
