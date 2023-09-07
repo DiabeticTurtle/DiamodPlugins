@@ -521,7 +521,6 @@ class ReactionRoleCreationPanel(RoleManagerView):
             await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             await interaction.response.defer()
-            # resolve bind data
             if self.__bind is MISSING:
                 self.__bind = self.model.new_bind()
 
