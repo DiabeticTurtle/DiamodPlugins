@@ -106,7 +106,7 @@ class Welcomer(commands.Cog):
             button = ui.Button(
                 label="Introduce Yourself",
                 custom_id="navigate_to_channel",
-                style=ButtonStyle.link,
+                style=ui.ButtonStyle.link,
                 url=f"https://discord.com/channels/{ctx.guild.id}/1148767813587193896"
             )
 
