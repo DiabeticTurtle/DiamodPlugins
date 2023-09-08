@@ -26,11 +26,11 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str, mod: bool = False):
+    async def add(self, ctx, name, category, mod=None, *, content):
         """
         Make a new tag
         """
-        # Check if the content starts and ends with triple backticks
+        is_mod = mod is not None and mod.lower() == 'mod'
         code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
 
         if code_block_match:
@@ -50,10 +50,7 @@ class TagsPlugin(commands.Cog):
                 return
             
             # Determine the category of the tag (User or Moderator)
-        if mod:
-            tag_category = "Moderator"
-        else:
-            tag_category = "User"
+        tag_category = "Moderator" if is_mod else "User"
 
         # Save the tag to the database
         await self.db.insert_one(
