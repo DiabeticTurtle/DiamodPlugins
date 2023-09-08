@@ -141,7 +141,7 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def edit(self, ctx: commands.Context, name: str, category: str, content: str, mod: bool = False):
+    async def edit(self, ctx: commands.Context, name: str, category: str, mod: bool = False, *, content: str):
         """
         Edit an existing tag
         Only the owner of the tag or a user with Manage Server permissions can use this command
