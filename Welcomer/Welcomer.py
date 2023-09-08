@@ -105,7 +105,7 @@ class Welcomer(commands.Cog):
         if formatted_message:
             button = menus.Button(
                 label="Introduce Yourself",
-                custom_id="navigate_to_channel"
+                custom_id="navigate_to_channel",
                 style=discord.ButtonStyle.link,
                 url=f"https://discord.com/channels/{ctx.guild.id}/1148767813587193896"
             )
