@@ -103,16 +103,16 @@ class Welcomer(commands.Cog):
 
         formatted_message = self.format_message(ctx.author, message, SafeString('{invite}'))
         if formatted_message:
-            button = menus.Button(
+            button = ui.Button(
                 label="Introduce Yourself",
                 custom_id="navigate_to_channel",
-                style=discord.ButtonStyle.link,
+                style=ButtonStyle.link,
                 url=f"https://discord.com/channels/{ctx.guild.id}/1148767813587193896"
             )
 
     # Create an embed with the formatted message and the button
             embed = discord.Embed.from_dict(formatted_message)
-            view = menus.View()
+            view = ui.View()
             view.add_item(button)
 
             await channel.send(**formatted_message)
