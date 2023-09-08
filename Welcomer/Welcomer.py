@@ -1,10 +1,9 @@
 import json
 
 import discord
-from discord import ButtonStyle, Interaction, ui
 from box import Box
 from discord.ext import commands
-from discord import ButtonStyle, Interaction, ui
+
 from .models import apply_vars, SafeString
 
 
@@ -57,38 +56,20 @@ class Welcomer(commands.Cog):
         except json.JSONDecodeError:
             # message is not embed
             message = apply_vars(self, member, message, invite)
-            message = {'content': message, 'components': []}
-
-            components = message['components']
-            components.append(
-                ui.Button(
-                    label="Introduce yourself",
-                    url="https://discord.com/channels/257554742371155998/1148767813587193896",
-                    style=ButtonStyle.URL,
-                ).to_dict()
-            )            
+            message = {'content': message}
         else:
             # message is embed
             message = self.apply_vars_dict(member, message, invite)
 
             if any(i in message for i in ('embed', 'content')):
                 message['embed'] = discord.Embed.from_dict(message['embed'])
-                message['components'] = []
-                components = message['components']
-                components.append(
-                    ui.Button(
-                        label="Join Our Discord!",
-                        url="https://discord.gg/your_server_invite_link",
-                        style=ButtonStyle.URL,
-                    ).to_dict()
-                )
             else:
                 message = None
         return message
 
     @commands.has_permissions(manage_guild=True)
     @commands.command()
-    async def welcomer(self, ctx, channel: discord.TextChannel, message_link, *, message):
+    async def welcomer(self, ctx, channel: discord.TextChannel, *, message):
         """Sets up welcome command. Check [here](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)
         for complex usage.
         """
@@ -104,18 +85,6 @@ class Welcomer(commands.Cog):
 
         formatted_message = self.format_message(ctx.author, message, SafeString('{invite}'))
         if formatted_message:
-            button = ui.Button(
-                label="Introduce Yourself",
-                custom_id="navigate_to_channel",
-                style=ui.ButtonStyle.link,
-                url=f"https://discord.com/channels/{ctx.guild.id}/1148767813587193896"
-            )
-
-    # Create an embed with the formatted message and the button
-            embed = discord.Embed.from_dict(formatted_message)
-            view = ui.View()
-            view.add_item(button)
-
             await channel.send(**formatted_message)
             await self.db.find_one_and_update(
                 {'_id': 'config'},
