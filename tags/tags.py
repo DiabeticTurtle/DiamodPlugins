@@ -30,7 +30,7 @@ class TagsPlugin(commands.Cog):
         """
         Make a new tag
         """
-        is_mod = mod is not None and mod.lower() == 'mod'
+        # Check if the content starts and ends with triple backticks
         code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
 
         if code_block_match:
