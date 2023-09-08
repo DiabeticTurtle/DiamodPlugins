@@ -1,6 +1,7 @@
 import json
 
 import discord
+from discord import ButtonStyle, Interaction, ui
 from box import Box
 from discord.ext import commands
 
@@ -56,13 +57,31 @@ class Welcomer(commands.Cog):
         except json.JSONDecodeError:
             # message is not embed
             message = apply_vars(self, member, message, invite)
-            message = {'content': message}
+            message = {'content': message, 'components': []}
+
+            components = message['components']
+            components.append(
+                ui.Button(
+                    label="Introduce yourself",
+                    url="https://discord.com/channels/257554742371155998/1148767813587193896",
+                    style=ButtonStyle.URL,
+                ).to_dict()
+            )            
         else:
             # message is embed
             message = self.apply_vars_dict(member, message, invite)
 
             if any(i in message for i in ('embed', 'content')):
                 message['embed'] = discord.Embed.from_dict(message['embed'])
+                message['components'] = []
+                components = message['components']
+                components.append(
+                    ui.Button(
+                        label="Join Our Discord!",
+                        url="https://discord.gg/your_server_invite_link",
+                        style=ButtonStyle.URL,
+                    ).to_dict()
+                )
             else:
                 message = None
         return message
