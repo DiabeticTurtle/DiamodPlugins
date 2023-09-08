@@ -26,7 +26,7 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str, mod: bool = False):
+    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Make a new tag
         """
@@ -48,12 +48,6 @@ class TagsPlugin(commands.Cog):
             except json.JSONDecodeError:
                 await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
                 return
-            
-            # Determine the category of the tag (User or Moderator)
-        if mod:
-            tag_category = "Moderator"
-        else:
-            tag_category = "User"
 
         # Save the tag to the database
         await self.db.insert_one(
@@ -130,7 +124,7 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def edit(self, ctx: commands.Context, name: str, category: str, content: str, mod: bool = False):
+    async def edit(self, ctx: commands.Context, name: str, category: str, *, content: str):
         """
         Edit an existing tag
         Only the owner of the tag or a user with Manage Server permissions can use this command
