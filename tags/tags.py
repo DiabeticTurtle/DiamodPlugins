@@ -26,7 +26,7 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str):
+    async def add(self, ctx: commands.Context, name: str, category: str, *, content: str, mod: bool = False):
         """
         Make a new tag
         """
@@ -48,6 +48,12 @@ class TagsPlugin(commands.Cog):
             except json.JSONDecodeError:
                 await ctx.send(f":x: | The provided content is not valid JSON or JavaScript.")
                 return
+            
+            # Determine the category of the tag (User or Moderator)
+        if mod:
+            tag_category = "Moderator"
+        else:
+            tag_category = "User"
 
         # Save the tag to the database
         await self.db.insert_one(
@@ -58,12 +64,12 @@ class TagsPlugin(commands.Cog):
                 "updatedAt": datetime.utcnow(),
                 "author": ctx.author.id,
                 "uses": 0,
-                "category": category,
+                "category": tag_category,  
             }
         )
 
         await ctx.send(
-            f":white_check_mark: | Tag with name `{name}` has been successfully created in the category `{category}`!"
+            f":white_check_mark: | Tag with name `{name}` has been successfully created in the category `{tag_category}`!"
         )
 
         
@@ -75,13 +81,16 @@ class TagsPlugin(commands.Cog):
         if not tags:
             return await ctx.send(':x: | You don\'t have any tags.')
 
-        embed = discord.Embed(title="Tag List", color=None)
+        # Create a dictionary to store tags by category
+        tags_by_category = {"Unidentified": []}
 
-        tags_by_category = {}
         for tag in tags:
             category = tag.get('category', 'Unidentified')
             tag_name = tag.get('name', 'No Name')
 
+            # If the tag doesn't have a name, put it in the "Unidentified" category
+            if not tag_name:
+                category = "Unidentified"
 
             if category not in tags_by_category:
                 tags_by_category[category] = []
@@ -89,11 +98,22 @@ class TagsPlugin(commands.Cog):
             if tag_name != 'No Name':
                 tags_by_category[category].append(tag_name)
 
-        sorted_categories = sorted(tags_by_category.keys())  # Sort categories alphabetically
+        # Sort categories alphabetically
+        sorted_categories = sorted(tags_by_category.keys())
 
-        for category in sorted_categories:  # Iterate through sorted categories
-            tag_names = sorted(tags_by_category[category])  # Sort the tag_names in alphabetical order
+        embed = discord.Embed(title="Tag List", color=None)
+
+        for category in sorted_categories:
+            tag_names = sorted(tags_by_category[category])
             tags_list_str = ", ".join(tag_names)
+        
+            # If the user has manage_guild permission, include moderation tags
+            if ctx.author.guild_permissions.manage_guild:
+                moderation_tags = await self.db.find({"category": category, "mod": True}).to_list(length=None)
+                for mod_tag in moderation_tags:
+                    if mod_tag.get('name') not in tag_names:
+                        tag_names.append(mod_tag.get('name'))
+
             embed.add_field(name=f"{category} Tags", value=tags_list_str, inline=False)
 
         await ctx.send(embed=embed)
@@ -124,12 +144,13 @@ class TagsPlugin(commands.Cog):
 
 
     @tags.command()
-    async def edit(self, ctx: commands.Context, name: str, category: str, *, content: str):
+    async def edit(self, ctx: commands.Context, name: str, category: str, content: str, mod: bool = False):
         """
         Edit an existing tag
         Only the owner of the tag or a user with Manage Server permissions can use this command
         """
         tag = await self.find_db(name=name)
+    
         # Check if the content starts and ends with triple backticks
         code_block_match = re.match(r"```(.*?)\n(.*?)```", content, re.DOTALL)
 
@@ -148,16 +169,21 @@ class TagsPlugin(commands.Cog):
             except json.JSONDecodeError:
                 await ctx.send(":x: | The provided content is not valid JSON or JavaScript.")
                 return
-    
+
         if not tag:
             await ctx.send(f":x: | Tag `{name}` not found in the database.")
             return
 
         member: discord.Member = ctx.author
-    
+
+        # Check if the author is the owner of the tag or has manage_guild permissions
         if ctx.author.id == tag.get("author") or member.guild_permissions.manage_guild:
             updated_fields = {"content": content, "updatedAt": datetime.utcnow()}
-            if category != tag.get("category"):
+
+            # Check if the author has the ability to change the tag to a moderator tag
+            if mod and member.guild_permissions.manage_guild:
+                updated_fields["category"] = "Moderator"
+            else:
                 updated_fields["category"] = category
 
             await self.db.find_one_and_update(
@@ -166,10 +192,11 @@ class TagsPlugin(commands.Cog):
             )
 
             await ctx.send(
-                f":white_check_mark: | Tag `{name}` is updated successfully in the category `{category}`!"
+                f":white_check_mark: | Tag `{name}` is updated successfully in the category `{updated_fields['category']}`!"
             )
         else:
             await ctx.send("You don't have enough permissions to edit that tag")
+
 
 
     @tags.command()
