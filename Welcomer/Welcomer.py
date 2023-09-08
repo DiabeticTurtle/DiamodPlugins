@@ -104,8 +104,8 @@ class Welcomer(commands.Cog):
         formatted_message = self.format_message(ctx.author, message, SafeString('{invite}'))
         if formatted_message:
             button = menus.Button(
-                label="Join Our Discord!",
-                custom_id="join_discord",
+                label="Introduce yourself",
+                custom_id="navigate_to_channel"
                 style=discord.ButtonStyle.link,
                 url=f"https://discord.com/channels/{ctx.guild.id}/1148767813587193896"
             )
