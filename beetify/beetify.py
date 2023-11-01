@@ -47,12 +47,13 @@ class Beetify(commands.Cog):
             draw = ImageDraw.Draw(avatar_image)
 
             circle_radius = 63
-            num_colors = 360  # Number of colors in the rainbow (360 degrees)
-
-            for angle in range(num_colors):
-                # Convert the angle to a color in the rainbow
-                color = colorsys.hsv_to_rgb(angle / num_colors, 1, 1)
-                color = tuple(int(c * 255) for c in color)
+            num_colors = 6  # Number of colors in the rainbow (360 degrees)
+            colors = [(255, 0, 0), (255, 165, 0), (255, 255, 0), (0, 128, 0), (0, 0, 255), (148, 0, 211)]
+            
+            for i in range(num_colors):
+                start_angle = i * (360 / num_colors)
+                end_angle = (i + 1) * (360 / num_colors)
+                color = colors[i]
 
                 # Calculate the position of the circle
                 x1 = 64 - circle_radius
