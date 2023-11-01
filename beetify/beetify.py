@@ -6,40 +6,37 @@ from PIL import Image, ImageDraw
 class beetify(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.avatar_size_threshold = 512
 
     @commands.command()
     async def beetify(self, ctx):
         """Add a thick blue circle (Diabetes Awareness Month style) around your profile picture"""
         
         user_avatar = ctx.author.avatar
-        
+        width, height = user_avatar.size
 
+        if min(width, height) < self.avatar_size_threshold:
+            # Use the 128-pixel version with a width of 24
+            user_avatar = ctx.author.avatar.with_size(128)
+            circle_width = 24
+        else:
+            # Use the 512-pixel version with a width of 39
+            user_avatar = ctx.author.avatar.with_size(512)
+            circle_width = 39
 
-        
         with io.BytesIO(await user_avatar.read()) as image_binary:
-            avatar_image = Image.open(image_binary).convert('RGB')
+            avatar_image = Image.open(image_binary)
 
-           
             draw = ImageDraw.Draw(avatar_image)
-            width, height = user_avatar.size
-            circle_size_percentage = 0.5  # Adjust this percentage as needed
-            circle_size = int(min(width, height) * circle_size_percentage)
-            circle_color = "#465cec"
-            
-            # Calculate the position to center the circle
-            left = (self.avatar_size - circle_size) // 2
-            top = (self.avatar_size - circle_size) // 2
-            right = left + circle_size
-            bottom = top + circle_size
 
-            draw.ellipse((left, top, right, bottom), outline=circle_color, width=39)
-            
-            
+            circle_color = "#465cec"
+
+            draw.ellipse((0, 0, user_avatar.size[0], user_avatar.size[1]), outline=circle_color, width=circle_width)
+
             with io.BytesIO() as output_binary:
                 avatar_image.save(output_binary, format="PNG")
                 output_binary.seek(0)
 
-                
                 await ctx.send(file=File(output_binary, filename="beetified_avatar.png"))
 
 async def setup(bot):
