@@ -22,7 +22,7 @@ class beetify(commands.Cog):
 
             circle_color = "#465cec"
            
-            draw.ellipse((0, 0, 512, 512), outline=circle_color, width=55)
+            draw.ellipse((0, 0, 512, 512), outline=circle_color, width=45)
 
             
             
