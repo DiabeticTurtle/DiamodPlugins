@@ -2,6 +2,7 @@ from discord.ext import commands
 from discord import File
 import io
 from PIL import Image, ImageDraw
+import colorsys
 
 class Beetify(commands.Cog):
     def __init__(self, bot):
