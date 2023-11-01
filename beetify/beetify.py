@@ -20,9 +20,11 @@ class beetify(commands.Cog):
            
             draw = ImageDraw.Draw(avatar_image)
 
+            circle_color = "#79addc"
            
-            draw.ellipse((0, 0, 128, 128), outline="blue", width=10)
+            draw.ellipse((0, 0, 128, 128), outline=circle_color, width=14)
 
+            
             
             with io.BytesIO() as output_binary:
                 avatar_image.save(output_binary, format="PNG")
