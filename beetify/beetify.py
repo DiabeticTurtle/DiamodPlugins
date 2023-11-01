@@ -17,16 +17,22 @@ class beetify(commands.Cog):
 
         
         with io.BytesIO(await user_avatar.read()) as image_binary:
-            avatar_image = Image.open(image_binary)
+            avatar_image = Image.open(image_binary).convert('RGB')
 
            
             draw = ImageDraw.Draw(avatar_image)
             width, height = user_avatar.size
-            circle_size_percentage = 0.4  # Adjust this percentage as needed
+            circle_size_percentage = 0.5  # Adjust this percentage as needed
             circle_size = int(min(width, height) * circle_size_percentage)
             circle_color = "#465cec"
-            draw.ellipse((0, 0, circle_size, circle_size), outline=circle_color, width=39)
+            
+            # Calculate the position to center the circle
+            left = (self.avatar_size - circle_size) // 2
+            top = (self.avatar_size - circle_size) // 2
+            right = left + circle_size
+            bottom = top + circle_size
 
+            draw.ellipse((left, top, right, bottom), outline=circle_color, width=39)
             
             
             with io.BytesIO() as output_binary:
