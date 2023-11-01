@@ -31,5 +31,5 @@ class Beetify(commands.Cog):
                 # Send the modified avatar as a file
                 await ctx.send(file=File(output_binary, filename="beetified_avatar.png"))
 
-def setup(bot):
-    bot.add_cog(Beetify(bot))
+async def setup(bot):
+    await bot.add_cog(Beetify(bot))
