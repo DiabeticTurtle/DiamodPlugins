@@ -1,5 +1,5 @@
 from discord.ext import commands
-from discord import Member, File
+from discord import File
 import io
 from PIL import Image, ImageDraw
 
@@ -8,12 +8,12 @@ class Beetify(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def beetify(self, ctx, member: Member):
-        """Add a thick blue circle (Diabetes Awareness Month style) around a user's profile picture"""
-        # Get the user's avatar
-        user_avatar = member.avatar_url_as(size=128)
+    async def beetify(self, ctx):
+        """Add a thick blue circle (Diabetes Awareness Month style) around your profile picture"""
+        # Get the author's avatar
+        user_avatar = ctx.author.avatar_url_as(size=128)
 
-        # Create an Image object from the user's avatar
+        # Create an Image object from the author's avatar
         with io.BytesIO(await user_avatar.read()) as image_binary:
             avatar_image = Image.open(image_binary)
 
