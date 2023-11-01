@@ -12,7 +12,7 @@ class beetify(commands.Cog):
         """Add a thick blue circle (Diabetes Awareness Month style) around a user's profile picture"""
 
         user = member if member else ctx.author
-        user_avatar = user.avatar_url_as(size=128)
+        user_avatar = user.avatar_url
 
         with BytesIO(await user_avatar.read()) as data:
             pfp = Image.open(data)
@@ -29,8 +29,11 @@ class beetify(commands.Cog):
 
             # You can add text or other modifications here if needed
 
+            with BytesIO() as output_binary:
+                my_image.save(output_binary, format="PNG")
+                output_binary.seek(0)
 
-            await ctx.send(file=File(output_binary, filename="beetified_avatar.png"))
+                await ctx.send(file=File(output_binary, filename="beetified_avatar.png"))
 
 async def setup(bot):
-   await bot.add_cog(beetify(bot))
+    await bot.add_cog(beetify(bot))
