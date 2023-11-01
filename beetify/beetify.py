@@ -1,5 +1,5 @@
 from discord.ext import commands
-from discord import File
+from discord import File, Member
 from io import BytesIO
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 
