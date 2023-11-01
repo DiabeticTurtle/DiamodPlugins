@@ -17,11 +17,11 @@ class beetify(commands.Cog):
         ellipse_dimensions = (0, 0, 0, 0)
         circle_width = 0
 
-        if user_avatar_512:
+        if user_avatar == user_avatar:
             # Use the 512-pixel version with a width of 39
             user_avatar = user_avatar_512
             ellipse_dimensions = (0, 0, 512, 512)
-            circle_width = 39
+            circle_width = 39   
         else:
             # Use the 128-pixel version with a width of 24
             ellipse_dimensions = (0, 0, 128, 128)
@@ -29,7 +29,7 @@ class beetify(commands.Cog):
             
 
 
-        with io.BytesIO(await user_avatar_512.read()) as image_binary:
+        with io.BytesIO(await user_avatar.read()) as image_binary:
             avatar_image = Image.open(image_binary)
 
             draw = ImageDraw.Draw(avatar_image)
