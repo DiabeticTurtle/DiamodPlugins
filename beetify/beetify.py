@@ -32,7 +32,7 @@ class beetify(commands.Cog):
 
             circle_color = "#465cec"
 
-            draw.ellipse((0, 0, user_avatar.size[0], user_avatar.size[1]), outline=circle_color, width=circle_width)
+            draw.ellipse((0, 0, user_avatar.width, user_avatar.height), outline=circle_color, width=circle_width)
 
             with io.BytesIO() as output_binary:
                 avatar_image.save(output_binary, format="PNG")
