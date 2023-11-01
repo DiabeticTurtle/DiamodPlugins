@@ -16,7 +16,7 @@ class beetify(commands.Cog):
         user_avatar_512 = ctx.author.avatar.with_size(512)
 
 
-        if user_avatar == user_avatar_128:
+        if user_avatar == user_avatar:
             # Use the 128-pixel version with a width of 24
             circle_width = 24
         else:
