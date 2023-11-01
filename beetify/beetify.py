@@ -20,7 +20,7 @@ class beetify(commands.Cog):
            
             draw = ImageDraw.Draw(avatar_image)
 
-            circle_color = "#495ee7"
+            circle_color = "#465cec"
            
             draw.ellipse((0, 0, 512, 512), outline=circle_color, width=20)
 
