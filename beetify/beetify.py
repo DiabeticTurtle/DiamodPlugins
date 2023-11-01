@@ -14,14 +14,18 @@ class beetify(commands.Cog):
         
         user_avatar = ctx.author.avatar.with_size(128)
         user_avatar_512 = ctx.author.avatar.with_size(512)
-
+        ellipse_dimensions = (0, 0, 0, 0)
+        circle_width = 0
 
         if user_avatar == user_avatar:
             # Use the 128-pixel version with a width of 24
+            ellipse_dimensions = (0, 0, 128, 128)
             circle_width = 24
+            
         else:
             # Use the 512-pixel version with a width of 39
             user_avatar = user_avatar_512
+            ellipse_dimensions = (0, 0, 512, 512)
             circle_width = 39
 
 
@@ -32,7 +36,7 @@ class beetify(commands.Cog):
 
             circle_color = "#465cec"
 
-            draw.ellipse((0, 0, user_avatar.width, user_avatar.height), outline=circle_color, width=circle_width)
+            draw.ellipse(ellipse_dimensions, outline=circle_color, width=circle_width)
 
             with io.BytesIO() as output_binary:
                 avatar_image.save(output_binary, format="PNG")
