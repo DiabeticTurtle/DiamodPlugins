@@ -49,7 +49,7 @@ class Beetify(commands.Cog):
             circle_radius = 63
             num_colors = 6  # Number of colors in the rainbow (360 degrees)
             colors = [(255, 0, 0), (255, 165, 0), (255, 255, 0), (0, 128, 0), (0, 0, 255), (148, 0, 211)]
-            
+
             for i in range(num_colors):
                 start_angle = i * (360 / num_colors)
                 end_angle = (i + 1) * (360 / num_colors)
@@ -62,7 +62,7 @@ class Beetify(commands.Cog):
                 y2 = 64 + circle_radius
 
                 # Draw the rainbow-colored circle segment
-                draw.arc((x1, y1, x2, y2), angle, angle + 1, fill=color, width=14)
+                draw.arc((x1, y1, x2, y2), start_angle, end_angle, + 1, fill=color, width=14)
 
             with io.BytesIO() as output_binary:
                 avatar_image.save(output_binary, format="PNG")
