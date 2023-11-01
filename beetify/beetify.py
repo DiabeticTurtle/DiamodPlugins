@@ -12,7 +12,7 @@ class beetify(commands.Cog):
         """Add a thick blue circle (Diabetes Awareness Month style) around a user's profile picture"""
 
         user = member if member else ctx.author
-        user_avatar = user.avatar_url
+        user_avatar = user.avatar.url
 
         with BytesIO(await user_avatar.read()) as data:
             pfp = Image.open(data)
