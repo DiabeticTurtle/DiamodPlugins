@@ -3,7 +3,7 @@ from discord import File
 import io
 from PIL import Image, ImageDraw
 
-class Beetify(commands.Cog):
+class beetify(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -32,4 +32,4 @@ class Beetify(commands.Cog):
                 await ctx.send(file=File(output_binary, filename="beetified_avatar.png"))
 
 async def setup(bot):
-    bot.add_cog(Beetify(bot))
+    bot.add_cog(beetify(bot))
