@@ -46,7 +46,7 @@ class Beetify(commands.Cog):
 
             draw = ImageDraw.Draw(avatar_image)
 
-            circle_radius = 100
+            circle_radius = 24
             num_colors = 360  # Number of colors in the rainbow (360 degrees)
 
             for angle in range(num_colors):
