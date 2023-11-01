@@ -12,9 +12,7 @@ class beetify(commands.Cog):
         """Add a thick blue circle (Diabetes Awareness Month style) around your profile picture"""
         
         user_avatar = ctx.author.avatar
-        width, height = user_avatar.size
-        circle_size_percentage = 0.4  # Adjust this percentage as needed
-        circle_size = int(min(width, height) * circle_size_percentage)
+        
 
 
         
@@ -23,9 +21,10 @@ class beetify(commands.Cog):
 
            
             draw = ImageDraw.Draw(avatar_image)
-
+            width, height = user_avatar.size
+            circle_size_percentage = 0.4  # Adjust this percentage as needed
+            circle_size = int(min(width, height) * circle_size_percentage)
             circle_color = "#465cec"
-           
             draw.ellipse((0, 0, circle_size, circle_size), outline=circle_color, width=39)
 
             
