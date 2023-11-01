@@ -32,4 +32,4 @@ class beetify(commands.Cog):
                 await ctx.send(file=File(output_binary, filename="beetified_avatar.png"))
 
 async def setup(bot):
-    bot.add_cog(beetify(bot))
+   await bot.add_cog(beetify(bot))
