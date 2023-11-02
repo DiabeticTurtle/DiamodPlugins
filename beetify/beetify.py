@@ -12,7 +12,7 @@ class Beetify(commands.Cog):
     async def beetify(self, ctx):
         """Add a blue circle (Diabetes Awareness Month style) around your profile picture"""
         
-        user_avatar = ctx.author.avatar.with_size(128)  
+        user_avatar = ctx.author.avatar.with_size(512)  
 
         
         with io.BytesIO(await user_avatar.read()) as image_binary:
