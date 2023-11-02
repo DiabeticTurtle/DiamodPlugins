@@ -24,7 +24,7 @@ class Beetify(commands.Cog):
             
             circle_color = "#465cec"
             circle_image = Image.new("RGB", (128, 128), color=circle_color)
-            circle_image = circle_image.resize((100, 100), resample=Image.LANCZOS)
+            circle_image = circle_image.resize((50, 50), resample=Image.LANCZOS)
             avatar_image.paste(circle_image, (14, 14))
             
             draw.ellipse((0, 0, 128, 127), outline=circle_color, width=14)  
