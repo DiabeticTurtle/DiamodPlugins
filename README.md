@@ -22,7 +22,7 @@ Also check out the plugin wiki [here](https://github.com/kyb3r/modmail/wiki/Plug
 | Tags           | Custom embed commands.                                                                |
 | Voice          | Checks if the user is in a voice channel and adds a voice role. (work in progress)    |
 | Welcomer       | Welcome command to greet new users.                                                  |
-| Moderation     | A modified moderation plugin to manage and moderate your server.                        |
+| ~~Moderation~~     | ~~A modified moderation plugin to manage and moderate your server.~~                        |
 | stats          | Various stat commands.                                                               |
 | ModContact     | A plugin for contacting moderators.                                                  |
 | artprompts     | A plugin related to art prompts.                                                    |
@@ -34,6 +34,6 @@ Also check out the plugin wiki [here](https://github.com/kyb3r/modmail/wiki/Plug
 | reactionrole   | A plugin for managing roles via reactions to messages.                               |
 | staff-stats    | A plugin for tracking and displaying staff-related statistics.                      |
 | starboard      | A plugin for featuring and displaying star-worthy messages.                           |
-| tempmute       | A plugin for temporarily muting users.                                              |
+| ~~tempmute~~       | ~~A plugin for temporarily muting users.~~                                              |
 | translator     | A plugin for translating messages and text.                                          |
 | warn           | A plugin for issuing warnings to users.                                              |
