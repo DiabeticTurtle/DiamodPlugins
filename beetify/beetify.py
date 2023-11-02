@@ -61,12 +61,6 @@ class Beetify(commands.Cog):
                 x2 = 64 + circle_radius
                 y2 = 64 + circle_radius
 
-                # Calculate the position of the circle
-                x1 = 64 - circle_radius
-                y1 = 64 - circle_radius
-                x2 = 64 + circle_radius
-                y2 = 64 + circle_radius
-
                 # Draw the rainbow-colored circle segment
                 draw.arc((x1, y1, x2, y2), angle, angle + 1, fill=color, width=14)
 
