@@ -21,13 +21,12 @@ class Beetify(commands.Cog):
             
             draw = ImageDraw.Draw(avatar_image)
 
-            
             circle_color = "#465cec"
-            mask = Image.new('L', (128, 127), 0)
-            draw_mask = ImageDraw.Draw(mask)
-            draw_mask.ellipse((0, 0, 128, 127), fill=255)
-            
+            circle_image = Image.new("RGB", (128, 128), color=circle_color)
+            avatar_image.paste(circle_image, (14, 14))
+            circle_image = circle_image.resize((128*4, 128*4), resample=Image.LANCZOS)
             draw.ellipse((0, 0, 128, 127), outline=circle_color, width=14)  
+            circle_image = circle_image.resize((128, 128), resample=Image.LANCZOS)  
 
             
             with io.BytesIO() as output_binary:
