@@ -11,7 +11,7 @@ class Beetify(commands.Cog):
     @commands.command()
     async def beetify(self, ctx):
         """Add a blue circle (Diabetes Awareness Month style) around your profile picture"""
-        user = ctx.author
+        
         user_avatar = ctx.author.avatar.with_size(512)  
 
         
@@ -28,19 +28,12 @@ class Beetify(commands.Cog):
             avatar_image = avatar_image.resize((128, 128), resample=Image.LANCZOS)
 
             
-            if user_avatar.animated:
-                # If animated, save it as an APNG
-                with io.BytesIO() as output_binary:
-                    avatar_image.save(output_binary, format="APNG")
-                    output_binary.seek(0)
-                    await ctx.send(file=File(output_binary, filename="beetified_avatar.apng"))
-            else:
-                # If not animated, save it as a PNG
-                with io.BytesIO() as output_binary:
-                    avatar_image.save(output_binary, format="PNG")
-                    output_binary.seek(0)
-                    await ctx.send(file=File(output_binary, filename="beetified_avatar.png"))
+            with io.BytesIO() as output_binary:
+                avatar_image.save(output_binary, format="PNG")
+                output_binary.seek(0)
 
+                # Send the modified avatar as a file
+                await ctx.send(file=File(output_binary, filename="beetified_avatar.png"))
 
 async def setup(bot):
     await bot.add_cog(Beetify(bot))
