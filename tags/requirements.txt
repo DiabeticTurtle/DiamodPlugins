@@ -1,3 +1,2 @@
-discord-paginator
 python-box
 discord-ext-menus
