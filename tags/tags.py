@@ -4,7 +4,6 @@ import re
 import discord
 from datetime import datetime
 from discord.ext import commands
-from box import Box
 from core import checks
 from core.models import PermissionLevel
 from .models import apply_vars, SafeString
