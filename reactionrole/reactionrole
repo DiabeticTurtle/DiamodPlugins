@@ -310,6 +310,19 @@ class rolereact(commands.Cog):
         rrole = config[emote]["role"]
         role = discord.utils.get(guild.roles, id=int(rrole))
 
+        if payload.channel_id != payload.guild_id:  # If in a thread
+            thread = self.bot.get_channel(payload.channel_id)
+            try:
+                message = await thread.fetch_message(payload.message_id)
+            except (discord.NotFound, discord.HTTPException, discord.Forbidden):
+                return
+        else:  # If not in a thread, it's a regular channel
+            channel = self.bot.get_channel(payload.channel_id)
+            try:
+                message = await channel.fetch_message(payload.message_id)
+            except (discord.NotFound, discord.HTTPException, discord.Forbidden):
+                return
+
         if role:
             # Check if the member has any role in the whitelist
             whitelist_roles = config[emote].get("whitelist_roles", [])  # Get the whitelist roles for this emoji
@@ -410,13 +423,13 @@ class rolereact(commands.Cog):
                 member = discord.utils.get(guild.members, id=payload.user_id)
                 await member.remove_roles(role)
 
-        if payload.channel_id != payload.guild_id:  # If in a thread
+        if payload.channel_id != payload.guild_id:  # Check if it's in a thread
             thread = self.bot.get_channel(payload.channel_id)
             try:
                 message = await thread.fetch_message(payload.message_id)
             except (discord.NotFound, discord.HTTPException, discord.Forbidden):
                 return
-        else:  # If not in a thread
+        else:  # Regular channel
             channel = self.bot.get_channel(payload.channel_id)
             try:
                 message = await channel.fetch_message(payload.message_id)
