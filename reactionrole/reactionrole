@@ -437,4 +437,4 @@ class rolereact(commands.Cog):
             return False, "There's no reaction role set with this emoji!"
                 
 async def setup(bot):
-   await bot.add_cog(rolereact(bot))
+   await bot.add_cog(reactionrole(bot))
