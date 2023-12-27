@@ -18,7 +18,7 @@ class UnicodeEmoji(commands.Converter):
 
 Emoji = typing.Union[discord.PartialEmoji, discord.Emoji, UnicodeEmoji]
 
-class reactionrole(commands.Cog):
+class rolereact(commands.Cog):
     """Assign roles to your members with Reactions"""
 
     def __init__(self, bot):
@@ -409,7 +409,7 @@ class reactionrole(commands.Cog):
             if role:
                 member = discord.utils.get(guild.members, id=payload.user_id)
                 await member.remove_roles(role)
-                
+
         if payload.channel_id != payload.guild_id:  # If in a thread
             thread = self.bot.get_channel(payload.channel_id)
             try:
@@ -437,4 +437,4 @@ class reactionrole(commands.Cog):
             return False, "There's no reaction role set with this emoji!"
                 
 async def setup(bot):
-   await bot.add_cog(reactionrole(bot))
+   await bot.add_cog(rolereact(bot))
