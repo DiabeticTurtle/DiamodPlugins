@@ -274,23 +274,21 @@ class reactionrole(commands.Cog):
     async def on_raw_reaction_add(self, payload):
         if not payload.guild_id:
             return
-        
-        config = await self.db.find_one({"_id": "config"})
-        
-        emote = payload.emoji.name if payload.emoji.id is None else str(payload.emoji.id)
-        emoji = payload.emoji.name if payload.emoji.id is None else payload.emoji
-        
+
         guild = self.bot.get_guild(payload.guild_id)
         member = discord.utils.get(guild.members, id=payload.user_id)
-        
+
         if member.bot:
             return
-        
+
+        config = await self.db.find_one({"_id": "config"})
+        emote = payload.emoji.name if payload.emoji.id is None else str(payload.emoji.id)
+
         try:
             msg_id = config[emote]["msg_id"]
         except (KeyError, TypeError):
             return
-        
+
         if payload.message_id != int(msg_id):
             return
         
@@ -402,21 +400,26 @@ class reactionrole(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
-        if payload.guild_id is None:
-            return
-        config = await self.db.find_one({"_id": "config"})
-        emote = payload.emoji.name if payload.emoji.id is None else str(payload.emoji.id)
-        try:
-            msg_id = config[emote]["msg_id"]
-        except (KeyError, TypeError):
-            return
-        
-        if payload.message_id != int(msg_id):
+        if not payload.guild_id:
             return
 
         guild = self.bot.get_guild(payload.guild_id)
         member = discord.utils.get(guild.members, id=payload.user_id)
 
+        if member is None or member.bot:
+            return
+
+        config = await self.db.find_one({"_id": "config"})
+        emote = payload.emoji.name if payload.emoji.id is None else str(payload.emoji.id)
+
+        try:
+            msg_id = config[emote]["msg_id"]
+        except (KeyError, TypeError):
+            return
+
+        if payload.message_id != int(msg_id):
+            return
+        
         if member and member.bot:
             return
 
