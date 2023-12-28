@@ -307,6 +307,19 @@ class reactionrole(commands.Cog):
             await self._remove_reaction(payload, emoji, member)
             return
         
+        if payload.channel_id != payload.guild_id:  # If in a thread
+            thread = self.bot.get_channel(payload.channel_id)
+            try:
+                message = await thread.fetch_message(payload.message_id)
+            except (discord.NotFound, discord.HTTPException, discord.Forbidden):
+                return
+        else:  # If not in a thread, it's a regular channel
+            channel = self.bot.get_channel(payload.channel_id)
+            try:
+                message = await channel.fetch_message(payload.message_id)
+            except (discord.NotFound, discord.HTTPException, discord.Forbidden):
+                return    
+        
         rrole = config[emote]["role"]
         role = discord.utils.get(guild.roles, id=int(rrole))
 
@@ -389,26 +402,29 @@ class reactionrole(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
-        print(f"Raw Reaction Added: {payload.emoji.name} by {payload.user_id} in #{payload.channel_id}")
         if payload.guild_id is None:
             return
-        
         config = await self.db.find_one({"_id": "config"})
         emote = payload.emoji.name if payload.emoji.id is None else str(payload.emoji.id)
-        
         try:
             msg_id = config[emote]["msg_id"]
         except (KeyError, TypeError):
             return
-                                                              
-        if payload.message_id == int(msg_id):
-            guild = self.bot.get_guild(payload.guild_id)
-            rrole = config[emote]["role"]
-            role = discord.utils.get(guild.roles, id=int(rrole))
+        
+        if payload.message_id != int(msg_id):
+            return
 
-            if role:
-                member = discord.utils.get(guild.members, id=payload.user_id)
-                await member.remove_roles(role)
+        guild = self.bot.get_guild(payload.guild_id)
+        member = discord.utils.get(guild.members, id=payload.user_id)
+
+        if member and member.bot:
+            return
+
+        rrole = config[emote]["role"]
+        role = discord.utils.get(guild.roles, id=int(rrole))
+
+        if role:
+            await member.remove_roles(role)
                 
     async def _remove_reaction(self, payload, emoji, member):
         channel = self.bot.get_channel(payload.channel_id)
