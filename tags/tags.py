@@ -1,19 +1,39 @@
 import json
-from typing import Any, Dict, Union
+import logging
 import re
+from typing import Any, TypedDict
+
 import discord
 from datetime import datetime
 from discord.ext import commands
+from discord import app_commands
+
+from bot import ModmailBot
 from core import checks
 from core.models import PermissionLevel
-from .models import apply_vars, SafeString
+
+logging = logging.getLogger(__name__)
+
+# db schemas
+class TagEntry(TypedDict):
+    name: str
+    content: str
+    createdAt: datetime
+    updatedAt: datetime
+    author: int
+    uses: int
+    category: str
+
+
+class CategoryEntry(TypedDict):
+    category: str
 
 
 class TagsPlugin(commands.Cog):
-    def __init__(self, bot):
-        self.bot: discord.Client = bot
+    def __init__(self, bot: ModmailBot):
+        self.bot = bot
         self.db = bot.plugin_db.get_partition(self)
-        
+
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
     @checks.has_permissions(PermissionLevel.REGULAR)
@@ -57,10 +77,10 @@ class TagsPlugin(commands.Cog):
             f":white_check_mark: | Tag with name `{name}` has been successfully created in the category `{category}`!"
         )
 
-        
+
     @tags.command(name='list')
     async def list_(self, ctx):
-        '''Get a list of tags that have already been made.'''
+        """Get a list of tags that have already been made."""
         tags = await self.db.find({}).to_list(length=None)
 
         if not tags:
@@ -110,7 +130,7 @@ class TagsPlugin(commands.Cog):
 
         await ctx.send(f":white_check_mark: | Deleted category '{category}' and moved its tags to 'Unidentified'.")
 
-   
+
 
 
 
@@ -139,13 +159,13 @@ class TagsPlugin(commands.Cog):
             except json.JSONDecodeError:
                 await ctx.send(":x: | The provided content is not valid JSON or JavaScript.")
                 return
-    
+
         if not tag:
             await ctx.send(f":x: | Tag `{name}` not found in the database.")
             return
 
         member: discord.Member = ctx.author
-    
+
         if ctx.author.id == tag.get("author") or member.guild_permissions.manage_guild:
             updated_fields = {"content": content, "updatedAt": datetime.utcnow()}
             if category != tag.get("category"):
@@ -296,13 +316,13 @@ class TagsPlugin(commands.Cog):
                 # If command is ?tag tagname, treat content as an embed
                 embed = discord.Embed.from_dict(content)
                 await ctx.send(embed=embed)
-        
+
             await self.db.find_one_and_update(
                 {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
             )
-        
+
             return
-    
+
         # Format content as JSON
         formatted_json = json.dumps(content, indent=4)
 
@@ -375,38 +395,116 @@ class TagsPlugin(commands.Cog):
         await self.db.insert_one({"category": category_name})
         await ctx.send(f":white_check_mark: | Category `{category_name}` has been created!")
 
-
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
-            await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
-            return
+        # if msg.content.startswith("Please set your Nightscout") and msg.author.bot:
+        #     await ctx.send("If you'd like to learn more about Nightscout, type `?nightscout`.")
+        #     return
         if not msg.content.startswith(self.bot.prefix) or msg.author.bot:
             return
-        
+
         content = msg.content.replace(self.bot.prefix, "")
         names = content.split(" ")
 
-        tag = await self.db.find_one({"name": names[0]})
-    
-        if tag is None:
-            return
-
         try:
-            thing = json.loads(tag["content"])
+            embed = await self.get_tag_embed(names[0])
         except json.JSONDecodeError:
             await msg.channel.send("Error: The content of this tag is not valid JSON.")
             return
+        if not embed:
+            return
 
-        embed = discord.Embed.from_dict(thing['embed'])
         await msg.channel.send(embed=embed)
-        await self.db.find_one_and_update(
-            {"name": names[0]}, {"$set": {"uses": tag["uses"] + 1}}
-        )
 
-    async def find_db(self, name: str):
+    async def cog_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        logging.error("Interaction %s failed", interaction, exc_info=error)
+
+    @app_commands.command(name="tag", description="Get details about a tag")
+    @app_commands.describe(
+        name='Tag name'
+    )
+    @commands.guild_only()
+    async def tags_slash(self, interaction: discord.Interaction, name: str):
+        try:
+            embed = await self.get_tag_embed(name)
+        except json.JSONDecodeError:
+            logging.error("Tag '%s' has invalid JSON content", name, exc_info=True)
+            await interaction.response.send_message(
+                "Error: The content of this tag is not valid JSON."
+            )
+            return
+        if not embed:
+            await interaction.response.send_message(
+                f"Tag `{name}` was not found.", ephemeral=True
+            )
+            return
+
+        await interaction.response.send_message(embed=embed)
+
+    @tags_slash.autocomplete("name")
+    async def tag_autocomplete(
+        self, interaction: discord.Interaction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        emoji_regex = re.compile(r"<a?:(\w+):(\d{18})>")
+        def extract_display_name(tag: TagEntry) -> str:
+            """Extract the display name from a tag entry's embed, or the tag name if missing."""
+            try:
+                content = json.loads(tag["content"])
+                title = content.get("embed", {}).get("title", None)
+                if title:
+                    # clean embed title; remove markdown
+                    title = discord.utils.remove_markdown(title)
+                    # remove emotes/emojis
+                    title = emoji_regex.sub("", title).strip()
+
+                if 0 < len(title or "") < 50:
+                    title = tag["name"] + " | " + title
+                else:
+                    # title was too long or nonexistent
+                    title = tag["name"]
+                return title
+            except json.JSONDecodeError:
+                logging.error("Extracting display name failed on tag '%s' due to JSON error", tag, exc_info=True)
+                return tag["name"]
+            except Exception:
+                logging.error("Extracting display name failed on tag '%s'", tag, exc_info=True)
+                return tag["name"]
+
+        tags: list[TagEntry] = await self.db.find(
+            {
+                "name": {
+                    "$regex": fr"{current}",
+                    "$options": 'i',
+                }
+            }
+        ).to_list(length=None)
+
+        return [
+            app_commands.Choice(name=extract_display_name(tag)[:100], value=tag["name"])
+            for tag in tags[:25]
+        ]
+
+    async def get_tag_embed(self, name: str, add_use: bool = True) -> discord.Embed | None:
+        tag = await self.find_db(name)
+        if tag is None:
+            return None
+
+        content = json.loads(tag["content"])
+        embed = discord.Embed.from_dict(content["embed"])
+        if add_use:
+            await self.db.find_one_and_update(
+                {"name": name}, {"$set": {"uses": tag["uses"] + 1}}
+            )
+        return embed
+
+    async def find_db(self, name: str) -> TagEntry | None:
         return await self.db.find_one({"name": name})
 
 
-async def setup(bot):
+async def setup(bot: ModmailBot):
     await bot.add_cog(TagsPlugin(bot))
+
+    cmds = await bot.tree.sync()
+    for g in bot.guilds:
+        await bot.tree.sync(guild=g)
+    logging.error(f"Synced {len(cmds)} commands")
